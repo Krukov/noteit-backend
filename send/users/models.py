@@ -121,12 +121,3 @@ class Token(models.Model):
 
     def __str__(self):
         return self.key
-
-
-def get_authorization_header(request):
-    HTTP_HEADER_ENCODING = 'iso-8859-1'
-    auth = request.META.get('HTTP_AUTHORIZATION', b'')
-    if isinstance(auth, type('')):
-        # Work around django test client oddness
-        auth = auth.encode(HTTP_HEADER_ENCODING)
-    return auth
