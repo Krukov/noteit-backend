@@ -14,7 +14,8 @@ INSTALLED_APPS = (
 AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE_CLASSES = (
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'send.users.middlewares.TokenAuthentication',
+    'send.users.middlewares.BasicAuthMiddleware',
     'django.middleware.security.SecurityMiddleware',
 )
 

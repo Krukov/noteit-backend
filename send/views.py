@@ -5,6 +5,7 @@ from django.conf import settings
 from django.views.generic import View
 from django.http import HttpResponse
 from django.forms import ModelForm
+from django.shortcuts import redirect
 
 from .models import Message
 

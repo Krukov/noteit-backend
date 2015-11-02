@@ -95,11 +95,11 @@ class RegisterQuestion(models.Model):
 
     @models.permalink
     def url(self):
-        return 'question', self.uuid
+        return 'question', [self.uuid,]
 
     @cached_property
     def is_valid(self):
-        return self.date_create > timezone.now() - timedelta(getattr(settings, 'QUESTION_LIFE_TIME', {'hours': 1}))
+        return self.date_create > timezone.now() - timedelta(**getattr(settings, 'QUESTION_LIFE_TIME', {'hours': 1}))
 
 
 class Token(models.Model):

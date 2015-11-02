@@ -1,13 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import base64
+
 from django.db import transaction
 from django.views.generic.detail import BaseDetailView
-from django.http import HttpResponse, Http404
-from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.views.decorators.http import require_POST
+from django.utils.functional import cached_property
+from django.views.decorators.csrf import csrf_exempt
 
-from .models import RegisterQuestion
+from .models import RegisterQuestion, User
+from .middlewares import get_authorization_header, allready_auth, HTTP_HEADER_ENCODING
 
 
 class QuestionView(BaseDetailView):
@@ -16,31 +20,48 @@ class QuestionView(BaseDetailView):
     slug_url_kwarg = 'uuid'
     queryset = RegisterQuestion.objects.filter(is_active=True)
 
-    def get(self, request, *args, **kwargs):
-        _object = self.get_object()
-        if not _object.is_valid:
+    @cached_property
+    def object(self):
+        return self.get_object()
+
+    @csrf_exempt
+    def dispatch(self, request, *args, **kwargs):
+        if allready_auth(request):
             raise Http404
-        return HttpResponse(_object.question.text)
+        try:
+            auth = get_authorization_header(request).split()[1]
+            user = base64.b64decode(auth).decode(HTTP_HEADER_ENCODING).split(':')[0]
+        except (TypeError, UnicodeDecodeError):
+            raise Http404
+        else:
+            if user != getattr(self.object.user, User.USERNAME_FIELD):
+                raise Http404
+
+        if not self.object.is_valid:
+            user = self.object.user
+            self.object.delete()
+            return HttpResponseRedirect(user.question.url(), content='Update question')
+        
+        return super(QuestionView, self).dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponse(self.object.question.text)
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
-        _object = self.get_object()
-        if not _object.is_valid:
-            raise Http404
-        if 'answer' in request.POST:
-            if _object.question.answer == request.POST.get('answer'):
-                user = _object.user
-                user.is_register = True
-                _object.is_active = False
-                user.save()
-                _object.save()
-                return HttpResponse('Ok', status=202)
-            return HttpResponse('Wrong answer. Question: "%s"' % _object.question.text, status=400)
-        return HttpResponse('Expect parameter "answer" in the request body. Question: "%s"' % _object.question.text,
-                            status=400)
+        if 'answer' not in request.POST:
+            return HttpResponse('Expect parameter "answer" in the request body. Question: "%s"' % self.object.question.text,
+                                status=400)
+        if self.object.question.answer == request.POST.get('answer'):
+            user = self.object.user
+            user.is_register = True
+            self.object.is_active = False
+            user.save()
+            self.object.save()
+            return HttpResponse('Ok', status=202)
+        return HttpResponse('Wrong answer. Question: "%s"' % self.object.question.text, status=400)
 
 
-@login_required
 @require_POST
 def drop_token(request):
     request.user.auth_token.update()

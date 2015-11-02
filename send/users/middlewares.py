@@ -3,11 +3,12 @@
 
 import base64
 
-from django.contrib.auth import authenticate, models
+from django.contrib.auth import authenticate
 from django.http import HttpResponse
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import SimpleLazyObject
+from django.shortcuts import redirect
 
 from .models import Token, User
 
@@ -22,6 +23,13 @@ def get_authorization_header(request):
         auth = auth.encode(HTTP_HEADER_ENCODING)
     return auth
 
+def is_privete_zone(request):
+    return request.path in ['/', '/drop_token']    
+
+
+def allready_auth(request):
+    return hasattr(request, 'user') and hasattr(request.user, 'pk') and request.user.pk
+
 
 class BasicAuthMiddleware:
 
@@ -32,10 +40,14 @@ class BasicAuthMiddleware:
         return response
 
     def process_request(self, request):
+        if not is_privete_zone(request) or allready_auth(request):
+            return
+
         auth = get_authorization_header(request).split()
 
         if not auth or auth[0].lower() != b'basic':
-            return None
+            return self.not_auth(_('Not authenticated.'))
+ 
 
         if len(auth) != 2:
             return self.not_auth(_('Invalid basic header.'))
@@ -46,15 +58,16 @@ class BasicAuthMiddleware:
             return self.not_auth(_('Invalid basic header.'))
 
         user, password = auth_parts[0], auth_parts[2]
-        request.user = self.authenticate_credentials(user, password)
-
-    def authenticate_credentials(self, user, password):
-
         credentials = {
             User.USERNAME_FIELD: user,
             'password': password
         }
-        user = authenticate(**credentials)
+        user, created = User.objects.get_or_create(**{User.USERNAME_FIELD: user})
+        if created:
+            user.set_password(password)
+            return redirect(user.question.url())
+
+        user = authenticate(**credentials)  # TODO: remake with yourown logic
 
         if user is None:
             return self.not_auth(_('Invalid username/password.'))
@@ -62,7 +75,10 @@ class BasicAuthMiddleware:
         if not user.is_active:
             return self.not_auth(_('User inactive or deleted.'))
 
-        return user
+        if not user.is_register:
+            return redirect(user.question.url())
+
+        request.user = user
 
 
 class TokenAuthentication:
@@ -74,6 +90,9 @@ class TokenAuthentication:
         return response
 
     def process_request(self, request):
+        if not is_privete_zone(request) or allready_auth(request):
+            return
+
         auth = get_authorization_header(request).split()
 
         if not auth or auth[0].lower() != b'token':
@@ -83,13 +102,10 @@ class TokenAuthentication:
             return self.not_auth(_('Invalid basic header.'))
 
         try:
-            token = auth[1].decode()
+            key = auth[1].decode()
         except UnicodeError:
             return self.not_auth(_('Invalid token header. Token string should not contain invalid characters.'))
 
-        return self.authenticate_credentials(token)
-
-    def authenticate_credentials(self, key):
         try:
             token = Token.objects.select_related('user').get(key=key)
         except Token.DoesNotExist:
@@ -98,4 +114,7 @@ class TokenAuthentication:
         if not token.user.is_active:
             return self.not_auth(_('User inactive or deleted.'))
 
-        return token.user
+        request.user = token.user
+        
+        if not token.user.is_register:
+            return redirect(token.user.question.url())
