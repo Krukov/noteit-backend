@@ -11,7 +11,7 @@ from django.utils.functional import cached_property
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import RegisterQuestion, User
-from .middlewares import get_authorization_header, allready_auth, HTTP_HEADER_ENCODING
+from .middlewares import get_authorization_header, already_auth, HTTP_HEADER_ENCODING
 
 
 class QuestionView(BaseDetailView):
@@ -26,7 +26,7 @@ class QuestionView(BaseDetailView):
 
     @csrf_exempt
     def dispatch(self, request, *args, **kwargs):
-        if allready_auth(request):
+        if already_auth(request):
             raise Http404
         try:
             auth = get_authorization_header(request).split()[1]
@@ -66,3 +66,8 @@ class QuestionView(BaseDetailView):
 def drop_token(request):
     request.user.auth_token.update()
     return HttpResponse(status=202)
+
+
+@require_POST
+def get_token(request):
+    return HttpResponse(request.user.token.key, status=201)
