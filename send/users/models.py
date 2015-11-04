@@ -62,14 +62,21 @@ class User(AbstractBaseUser, PermissionsMixin):
             return self.create_question()
         return question
 
+    @cached_property
+    def token(self):
+        return self.auth_token
+
     def create_question(self):
         questions = Question.objects.filter(is_active=True).values_list('id', flat=True)
         if questions:
             return RegisterQuestion.objects.create(user=self, question_id=random.choice(questions))
 
     def save(self, *args, **kwargs):
+        first = bool(self.id)
         result = super(User, self).save(*args, **kwargs)
-        if self.id and not self.questions.exists():
+        if first:
+            Token.objects.create(user=self)
+        if first and not self.questions.exists():
             self.create_question()
         return result
 
@@ -95,7 +102,7 @@ class RegisterQuestion(models.Model):
 
     @models.permalink
     def url(self):
-        return 'question', [self.uuid,]
+        return 'question', [self.uuid, ]
 
     @cached_property
     def is_valid(self):
