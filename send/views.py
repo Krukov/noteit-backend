@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from django.conf import settings
-from django.views.generic import View
+from django.views.generic import View, CreateView
 from django.http import HttpResponse
 from django.forms import Form, CharField
 
-from .models import Note
+from .models import Note, Report
 
 TEMPLATE = '{i}: {text}'
 
@@ -43,3 +43,9 @@ class NoteView(View):
     @staticmethod
     def get_limit():
         return getattr(settings, 'MAX_NOTES', 5)
+
+
+class ReportView(CreateView):
+    model = Report
+
+    
