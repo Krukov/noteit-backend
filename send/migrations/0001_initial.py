@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
-from django.conf import settings
+from django.db import migrations, models
 import uuid
+from django.conf import settings
 
 
 class Migration(migrations.Migration):
@@ -14,18 +14,18 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Message',
+            name='Note',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('uuid', models.UUIDField(default=uuid.uuid4, unique=True, verbose_name=b'UUID')),
-                ('text', models.TextField(max_length=16383, verbose_name=b'Message')),
+                ('id', models.AutoField(serialize=False, verbose_name='ID', auto_created=True, primary_key=True)),
+                ('uuid', models.UUIDField(default=uuid.uuid4, verbose_name='UUID', unique=True)),
+                ('text', models.TextField(verbose_name='Note', max_length=16383)),
                 ('is_active', models.BooleanField(default=True)),
                 ('date_create', models.DateTimeField(auto_now_add=True)),
                 ('last_update', models.DateTimeField(auto_now=True)),
-                ('owner', models.ForeignKey(related_name='messages', to=settings.AUTH_USER_MODEL)),
+                ('owner', models.ForeignKey(to=settings.AUTH_USER_MODEL, related_name='notes')),
             ],
             options={
-                'ordering': ['date_create'],
+                'ordering': ['-date_create'],
             },
         ),
     ]

@@ -7,6 +7,6 @@ from .views import *
 from .users import urls
 
 urlpatterns = [
-    url(r'^(?:(?P<index>\d)/)?$', MessageView.as_view()),
-    url(r'^', include(urls)),
+    url(r'^(?:(?P<index>\d)/)?$', NoteView.as_view()),
+    url(r'^', include(urls), name='notes'),
 ]

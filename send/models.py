@@ -7,10 +7,10 @@ from django.conf import settings
 from django.db import models
 
 
-class Message(models.Model):
+class Note(models.Model):
     uuid = models.UUIDField(max_length=63, default=uuid4, unique=True, verbose_name='UUID')
-    text = models.TextField(max_length=2**14-1, verbose_name='Message')
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='messages')
+    text = models.TextField(max_length=2**14-1, verbose_name='Note')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='notes')
 
     is_active = models.BooleanField(default=True)
 
