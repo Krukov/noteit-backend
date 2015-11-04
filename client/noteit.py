@@ -22,7 +22,7 @@ __VERSION__ = '0.0.1'
 _ANONYMOUS_USER_AGENT = 'anonymous'
 _USER_AGENT = '{}'
 _HOST = 'http://127.0.0.1:8000'
-_TOKEN_PATH = '~/.{name}/.{name}.tkn'
+_TOKEN_PATH = '~/.{name}/{name}.tkn'
 
 _USER_AGENT_HEADER = ''
 _AUTH_HEADER = 'Authorization'
@@ -49,10 +49,10 @@ def get_options_parser():
     parser.add_argument('-l', '--last', help='display only last note',
                         action='store_true')
     parser.add_argument('-n', '--num-note', help='display only note with given number', type=int)
-    parser.add_argument('-d', '--drop-tokens', help='make all you tokens unvalid',
+    parser.add_argument('-d', '--drop-tokens', help='make all you tokens invalid',
                         action='store_true')
     
-    parser.add_argument('-s', '--save', help='enable to save token localy',
+    parser.add_argument('-s', '--save', help='enable to save token locally',
                         action='store_true')    
     parser.add_argument('-c', '--color', help='enable colorized output',
                         action='store_true')
@@ -92,6 +92,7 @@ def main():
             out = create_note(options.note)
         else:
             get_options_parser().print_help()
+            return
         display(out)
     except Exception as e:
         if __DEBUG:
@@ -99,9 +100,7 @@ def main():
         if not options.report:
             print('Something went wrong! You can sent report to us with "--report" option')
         report(traceback.format_exc(e))
-        print('Thancks for reporting you problem')
-
-    _exit(0)
+        print('Thanks you for reporting...')
 
 
 def display(out, stdout=sys.stdout):
