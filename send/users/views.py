@@ -8,7 +8,6 @@ from django.views.generic.detail import BaseDetailView
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.views.decorators.http import require_POST
 from django.utils.functional import cached_property
-from django.views.decorators.csrf import csrf_exempt
 
 from .models import RegisterQuestion, User
 from .middlewares import get_authorization_header, already_auth, HTTP_HEADER_ENCODING
@@ -24,7 +23,6 @@ class QuestionView(BaseDetailView):
     def object(self):
         return self.get_object()
 
-    @csrf_exempt
     def dispatch(self, request, *args, **kwargs):
         if already_auth(request):
             raise Http404

@@ -23,8 +23,8 @@ def get_authorization_header(request):
     return auth
 
 
-def is_private_zone(request):
-    return request.path in ['/', reverse('drop_token'), reverse('get_token')]\
+def non_privat_zone(request):
+    return request.path.split('/')[0] in ['admin', 'question']
 
 
 def already_auth(request):
@@ -40,7 +40,7 @@ class BasicAuthMiddleware:
         return response
 
     def process_request(self, request):
-        if not is_private_zone(request) or already_auth(request):
+        if non_privat_zone(request) or already_auth(request):
             return
 
         auth = get_authorization_header(request).split()
@@ -92,7 +92,7 @@ class TokenAuthentication:
         return response
 
     def process_request(self, request):
-        if not is_private_zone(request) or already_auth(request):
+        if non_privat_zone(request) or already_auth(request):
             return
 
         auth = get_authorization_header(request).split()

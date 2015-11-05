@@ -32,7 +32,7 @@ class NoteView(View):
             return HttpResponse('Hello, you have not any notes. It can be created with POST request with "note" parameter at this path', status=204)
 
         if 'index' in kwargs and kwargs['index'] is not None and int(kwargs['index']) <= limit:
-            responce = notes[int(kwargs.get('index')) + 1].text
+            responce = notes[int(kwargs.get('index')) - 1].text
         elif 'n' in request.GET and request.GET.get('n').isdigit() and int(request.GET.get('n')) <= limit:
             responce = notes[int(request.GET.get('n')) - 1].text
         elif 'l' in request.GET or 'last' in request.GET:
@@ -59,7 +59,7 @@ def report_view(request):
     if form.is_valid():
         report = form.object
         report.user = request.user
-        report.info = request.headers['USER_AGENT']
+        report.info = request.headers['User-Agent']
         report.save()
         return HttpResponse(status=201)
     return HttpResponse('Invalid', status=400)

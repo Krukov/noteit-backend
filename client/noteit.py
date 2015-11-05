@@ -10,10 +10,10 @@ import sys
 import traceback
 
 try: 
-    import urllib2 as request  # Py<=3
+    from httplib import HTTPConnection  # Py<=3
     from urllib import urlencode
 except ImportError:
-    import urllib.request as request  # Py>=3
+    from http.client import HTTPConnection  # Py>=3
     from urllib.parse import urlencode
 
 
@@ -21,20 +21,20 @@ __DEBUG = True
 __VERSION__ = '0.0.1'
 _ANONYMOUS_USER_AGENT = 'anonymous'
 _USER_AGENT = '{}'
-_HOST = 'http://127.0.0.1:8000'
+_HOST = '127.0.0.1:8000'
 _TOKEN_PATH = '~/.noteit/noteit.tkn'
 
-_USER_AGENT_HEADER = 'UserAgent'
+_USER_AGENT_HEADER = 'User-Agent'
 _AUTH_HEADER = 'Authorization'
 _TOKEN_HEADER = 'Authorization'
 _TOKEN_HEADER_IN_RESPONSE = ''
 GET, POST, PUT = 'GET', 'POST', 'PUT'
 _URLS_MAP = {
-    'create_note': '',
-    'drop_tokens': 'drop_tokens',
-    'get_notes': '',
-    'get_note': '{i}',
-    'report': 'report',
+    'create_note': '/',
+    'drop_tokens': '/drop_tokens',
+    'get_notes': '/',
+    'get_note': '/{i}',
+    'report': '/report',
 }
 
 
@@ -90,7 +90,7 @@ def main():
         elif options.last:
             out = get_last_note()
         elif options.note:
-            out = create_note(options.note)
+            out = create_note(' '.join(options.note))
         else:
             out = get_notes_list()
         display(out.decode('ascii'))
@@ -104,7 +104,7 @@ def main():
 
 
 def display(out, stdout=sys.stdout):
-    stdout.write(out)
+    stdout.write(out + '\n')
 
 
 def _exit(status=0):
@@ -132,7 +132,7 @@ def create_note(note):
 
 
 def report(traceback):
-    return do_request(_URLS_MAP['report'], method=POST, data={'data': traceback})
+    return do_request(_URLS_MAP['report'], method=POST, data={'traceback': traceback})
 
 
 def drop_tokens():
@@ -176,6 +176,7 @@ def _save_token(token):
 def _get_encoding_basic_credentions():
     return b'basic ' + base64.b64encode(':'.join(_get_credentions()).encode('ascii'))
 
+
 def _get_headers():
     headers = {
         _USER_AGENT_HEADER: _get_user_agent(),
@@ -189,32 +190,34 @@ def _get_headers():
 
 
 def do_request(path, *args, **kwargs):
-    url = '/'.join([get_options().host, path])
     kwargs.setdefault('headers', {}).update(_get_headers())
-    responce = _make_request(url, *args, **kwargs)
+    responce = _make_request(path, *args, **kwargs)
     return _response_hendler(responce)
 
 
 def _response_hendler(responce):
     # TODO: check responce and raise raice custom exseption 
+    # import ipdb; ipdb.set_trace()
     if _TOKEN_HEADER_IN_RESPONSE in responce.headers and get_options().save:
         _save_token(responce.headers[_TOKEN_HEADER_IN_RESPONSE])
     return responce.read()
 
+def _get_connection():
+    return HTTPConnection(get_options().host)
+
 
 def _make_request(url, method=GET, data=None, headers=None):
     method = method.upper()
+    conn = _get_connection()
     if data:
-        data = urlencode(data)
-    if method == GET:
-        req = request.Request('?'.join([url, data or '']))
-    elif method in [POST, PUT]:
-        req = request.Request(url, data=data.encode('ascii'))
-    req.get_method = lambda *a, **k: method
-    if headers:
-        for name, value in headers.items():
-            req.add_header(name, value)
-    return request.urlopen(req)
+        data = urlencode(data).encode('ascii')
+        if method == GET:
+            url = '?'.join([url, data or ''])
+
+    if method in [POST]:
+        headers.update({"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"})
+    conn.request(method, url, body=data, headers=headers)
+    return conn.getresponse()
 
 
 if __name__ == '__main__':

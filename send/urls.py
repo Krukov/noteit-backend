@@ -8,7 +8,8 @@ from .users import urls
 
 
 urlpatterns = [
-    url(r'^(?:(?P<index>\d)/)?$', NoteView.as_view()),
+    url(r'^$', NoteView.as_view()),
+    url(r'^(?P<index>\d)/?$', NoteView.as_view()),
     url(r'^report/?$', report_view, name='report'),
     url(r'^', include(urls), name='notes'),
 ]
