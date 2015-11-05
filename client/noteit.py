@@ -128,7 +128,7 @@ def get_last_note():
 
 
 def create_note(note):
-    return do_request(_URLS_MAP['get_notes'], method=POST, data={'data': note})
+    return do_request(_URLS_MAP['get_notes'], method=POST, data={'note': note})
 
 
 def report(traceback):
@@ -209,7 +209,7 @@ def _make_request(url, method=GET, data=None, headers=None):
     if method == GET:
         req = request.Request('?'.join([url, data or '']))
     elif method in [POST, PUT]:
-        req = request.Request(url, data=data)
+        req = request.Request(url, data=data.encode('ascii'))
     req.get_method = lambda *a, **k: method
     if headers:
         for name, value in headers.items():
