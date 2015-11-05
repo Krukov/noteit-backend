@@ -22,11 +22,11 @@ __VERSION__ = '0.0.1'
 _ANONYMOUS_USER_AGENT = 'anonymous'
 _USER_AGENT = '{}'
 _HOST = 'http://127.0.0.1:8000'
-_TOKEN_PATH = '~/.{name}/{name}.tkn'
+_TOKEN_PATH = '~/.noteit/noteit.tkn'
 
-_USER_AGENT_HEADER = ''
+_USER_AGENT_HEADER = 'UserAgent'
 _AUTH_HEADER = 'Authorization'
-_TOKEN_HEADER = 'AuthorizationToken'
+_TOKEN_HEADER = 'Authorization'
 _TOKEN_HEADER_IN_RESPONSE = ''
 GET, POST, PUT = 'GET', 'POST', 'PUT'
 _URLS_MAP = {
@@ -44,6 +44,7 @@ def get_options_parser():
                         help='New Note')
     
     parser.add_argument('-u', '--user', help='username', type=str)
+    parser.add_argument('-p', '--password', help='password', type=str)
     parser.add_argument('--host', default=_HOST, help='host (default: %s)' % _HOST, type=str)
     
     parser.add_argument('-l', '--last', help='display only last note',
@@ -61,7 +62,7 @@ def get_options_parser():
                         action='store_true')
     parser.add_argument('--report', help='report error', action='store_true')
     
-    parser.add_argument('-v', '--version', help='displays the current version of {name}',
+    parser.add_argument('-v', '--version', help='displays the current version of noteit',
                         action='store_true')
     return parser
 
@@ -91,9 +92,8 @@ def main():
         elif options.note:
             out = create_note(options.note)
         else:
-            get_options_parser().print_help()
-            return
-        display(out)
+            out = get_notes_list()
+        display(out.decode('ascii'))
     except Exception as e:
         if __DEBUG:
             raise 
@@ -136,11 +136,11 @@ def report(traceback):
 
 
 def drop_tokens():
-    return do_request(_URLS_MAP['drop_tokens'], method=POST, data={'data': traceback})
+    return do_request(_URLS_MAP['drop_tokens'], method=POST)
 
 
 def _get_credentions():
-    password = getpass.getpass('Input you personal password: ')
+    password = get_options().password or getpass.getpass('Input you personal password: ')
     return get_options().user, password
         
 
@@ -173,6 +173,9 @@ def _save_token(token):
     return True
 
 
+def _get_encoding_basic_credentions():
+    return b'basic ' + base64.b64encode(':'.join(_get_credentions()).encode('ascii'))
+
 def _get_headers():
     headers = {
         _USER_AGENT_HEADER: _get_user_agent(),
@@ -181,7 +184,7 @@ def _get_headers():
     if token:
         headers[_TOKEN_HEADER] = token
     else:
-        headers[_AUTH_HEADER] = _get_credentions()
+        headers[_AUTH_HEADER] = _get_encoding_basic_credentions()
     return headers
 
 
@@ -193,7 +196,7 @@ def do_request(path, *args, **kwargs):
 
 
 def _response_hendler(responce):
-    # TODO: check and raise 
+    # TODO: check responce and raise raice custom exseption 
     if _TOKEN_HEADER_IN_RESPONSE in responce.headers and get_options().save:
         _save_token(responce.headers[_TOKEN_HEADER_IN_RESPONSE])
     return responce.read()
@@ -209,7 +212,7 @@ def _make_request(url, method=GET, data=None, headers=None):
         req = request.Request(url, data=data)
     req.get_method = lambda *a, **k: method
     if headers:
-        for name, value in headers.iteritems():
+        for name, value in headers.items():
             req.add_header(name, value)
     return request.urlopen(req)
 
