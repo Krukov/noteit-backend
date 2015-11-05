@@ -72,7 +72,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             return RegisterQuestion.objects.create(user=self, question_id=random.choice(questions))
 
     def save(self, *args, **kwargs):
-        first = bool(self.id)
+        first = not bool(self.id)
         result = super(User, self).save(*args, **kwargs)
         if first:
             Token.objects.create(user=self)

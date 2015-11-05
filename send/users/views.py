@@ -31,7 +31,7 @@ class QuestionView(BaseDetailView):
         try:
             auth = get_authorization_header(request).split()[1]
             user = base64.b64decode(auth).decode(HTTP_HEADER_ENCODING).split(':')[0]
-        except (TypeError, UnicodeDecodeError):
+        except (TypeError, UnicodeDecodeError, IndexError):
             raise Http404
         else:
             if user != getattr(self.object.user, User.USERNAME_FIELD):

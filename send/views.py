@@ -4,7 +4,8 @@
 from django.conf import settings
 from django.views.generic import View, CreateView
 from django.http import HttpResponse
-from django.forms import Form, CharField
+from django.forms import Form, CharField, ModelForm
+from django.views.decorators.http import require_POST
 
 from .models import Note, Report
 
@@ -15,13 +16,20 @@ class NoteForm(Form):
     note = CharField(max_length=2**14-1)
 
 
+class ReportForm(ModelForm):
+
+    class Meta:
+        model = Report
+        fields = ['traceback',]
+
+
 class NoteView(View):
 
     def get(self, request, *args, **kwargs):
         limit = self.get_limit()
         notes = request.user.notes.filter(is_active=True)[:limit]
         if not notes:
-            return HttpResponse(status=204)
+            return HttpResponse('Hello, you have not any notes. It can be created with POST request with "note" parameter at this path', status=204)
 
         if 'index' in kwargs and kwargs['index'] is not None and int(kwargs['index']) <= limit:
             responce = notes[int(kwargs.get('index')) + 1].text
@@ -45,7 +53,13 @@ class NoteView(View):
         return getattr(settings, 'MAX_NOTES', 5)
 
 
-class ReportView(CreateView):
-    model = Report
-
-    
+@require_POST
+def report_view(request):
+    form = ReportForm(request.POST)
+    if form.is_valid():
+        report = form.object
+        report.user = request.user
+        report.info = request.headers['USER_AGENT']
+        report.save()
+        return HttpResponse(status=201)
+    return HttpResponse('Invalid', status=400)
