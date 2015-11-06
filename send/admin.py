@@ -6,6 +6,11 @@ from . import models
 from .users.models import Token, User, Question, RegisterQuestion
 
 
+@register(models.Report)
+class ReportAdmin(ModelAdmin):
+    pass
+
+
 @register(models.Note)
 class NoteAdmin(ModelAdmin):
     pass
