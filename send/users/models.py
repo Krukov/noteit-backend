@@ -66,6 +66,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     def token(self):
         return self.auth_token
 
+    def drop_token(self):
+        self.token.delete()
+        return Token.objects.create(user=self)
+
     def create_question(self):
         questions = Question.objects.filter(is_active=True).values_list('id', flat=True)
         if questions:
@@ -121,10 +125,6 @@ class Token(models.Model):
 
     def generate_key(self):
         return binascii.hexlify(os.urandom(20)).decode()
-
-    def update_key(self):
-        self.key = self.generate_key()
-        self.save()
 
     def __str__(self):
         return self.key

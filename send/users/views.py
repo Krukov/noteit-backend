@@ -62,8 +62,10 @@ class QuestionView(BaseDetailView):
 
 @require_POST
 def drop_token(request):
-    request.user.auth_token.update()
-    return HttpResponse(status=202)
+    if request.user.token:
+        request.user.drop_token()
+        return HttpResponse(status=202)
+    return HttpResponse(status=400)
 
 
 @require_POST

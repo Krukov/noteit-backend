@@ -24,7 +24,7 @@ def get_authorization_header(request):
 
 
 def non_privat_zone(request):
-    return request.path.split('/')[0] in ['admin', 'question']
+    return request.path.split('/')[1] in ['admin', 'question']
 
 
 def already_auth(request):
