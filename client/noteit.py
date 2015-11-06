@@ -131,7 +131,6 @@ def _generate_user_agent_with_info():
         platform.platform(),
         platform.python_implementation(),
         platform.python_version(),
-        platform.python_compiler(),
         'VERSION: {}'.format(get_version()),
     ])
 
