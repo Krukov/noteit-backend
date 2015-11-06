@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             name='Report',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('traceback', models.TextField(max_length=19)),
+                ('traceback', models.TextField(max_length=1023)),
                 ('info', models.TextField(max_length=255)),
                 ('date_create', models.DateTimeField(auto_now_add=True)),
                 ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
