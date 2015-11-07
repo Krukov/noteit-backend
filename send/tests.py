@@ -121,7 +121,7 @@ class ClientTestCase(LiveServerTestCase):
         self._save = False
         self.user = TEST_USER['username']
         self.password = TEST_USER['password']
-        noteit.get_options = lambda: options(self.live_server_url, self._anonymous, self.user, self.password, self._save)
+        noteit.get_options = lambda: options(self.live_server_url[7:], self._anonymous, self.user, self.password, self._save)
 
     def test_get_notes(self):
         expected = '1: 9\n2: 8\n3: 7\n4: 6\n5: 5'
