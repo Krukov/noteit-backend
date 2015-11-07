@@ -71,7 +71,7 @@ def get_note(number):
 
 
 def get_last_note():
-    return get_note(0)
+    return get_note(1)
 
 
 def create_note(note):
