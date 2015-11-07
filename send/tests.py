@@ -6,7 +6,7 @@ import time
 from collections import namedtuple
 
 from django.core.urlresolvers import reverse
-from django.test import TestCase
+from django.test import TestCase, LiveServerTestCase
 
 from send.models import Note
 from send.users.models import User, RegisterQuestion, Question, Token
@@ -93,7 +93,6 @@ class FunctionTestCase(TestCase):
 
     def test_using_token(self):
         u = User.objects.create_user(is_register=True, **TEST_USER)
-        t = Token.objects.create(user=u)
         req = self.client.post(reverse('get_token'), **get_auth_header(**TEST_USER))
         self.assertEqual(req.status_code, 201, req)
         self.assertEqual(req.content.decode('ascii'), u.token.key, req)
@@ -106,7 +105,7 @@ class FunctionTestCase(TestCase):
         pass
 
 
-class ClientTestCase(TestCase):
+class ClientTestCase(LiveServerTestCase):
 
     def setUp(self):
         for i in range(10):
@@ -115,13 +114,12 @@ class ClientTestCase(TestCase):
         for i in range(10):
             Note.objects.create(text=str(i), owner=self.user)
 
-        options = namedtuple('OptionsMosk', ['host', 'anonymous', 'user', 'password', 'save'])
-        self.anonymous = False
-        self.save = False
+        options = namedtuple('OptionsMock', ['host', 'anonymous', 'user', 'password', 'save'])
+        self._anonymous = False
+        self._save = False
         self.user = TEST_USER['username']
         self.password = TEST_USER['password']
-        self.host = self.live_server.host
-        noteit.get_options = lambda: options([self.host, self.anonymous, self.user, self.password, self.save])
+        noteit.get_options = lambda: options(self.live_server_url, self._anonymous, self.user, self.password, self._save)
 
     def test_get_notes(self):
         expected = '1: 9\n2: 8\n3: 7\n4: 6\n5: 5'
@@ -129,7 +127,7 @@ class ClientTestCase(TestCase):
 
     def test_get_note(self):
         expected = '7'
-        self.assertEqual(noteit.get_note(), expected)
+        self.assertEqual(noteit.get_note(3), expected)
 
     def test_get_last_note(self):
         expected = '9'
