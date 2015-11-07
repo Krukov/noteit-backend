@@ -9,14 +9,14 @@ import platform
 import sys
 import traceback
 
-try: 
+try:
     from httplib import HTTPConnection  # Py<=3
     from urllib import urlencode
 except ImportError:
     from http.client import HTTPConnection  # Py>=3
     from urllib.parse import urlencode
 
-#TODO: add logging and put it in report 
+# TODO: add logging and put it in report
 
 __DEBUG = False
 __VERSION__ = '0.5.0'
@@ -60,7 +60,7 @@ def get_notes_list():
     notes, status = do_request(_URLS_MAP['get_notes'])
     if status == 200:
         return notes
-    raise Exception('Error at get_notes method: {} {}'.format(status, _))
+    raise Exception('Error at get_notes method: {} {}'.format(status, notes))
 
 
 def get_note(number):
@@ -81,8 +81,8 @@ def create_note(note):
     raise Exception('Error at create_note method: {} {}'.format(status, _))
 
 
-def report(traceback):
-    _, status = do_request(_URLS_MAP['report'], method=POST, data={'traceback': traceback})
+def report(tb):
+    _, status = do_request(_URLS_MAP['report'], method=POST, data={'traceback': tb})
     if status == 201:
         return 'Thanks you for reporting...'
     return 'Error: can not report error'
@@ -91,7 +91,7 @@ def report(traceback):
 def drop_tokens():
     _, status = do_request(_URLS_MAP['drop_tokens'], method=POST)
     if status == 202:
-        return 'Tokens are droped'
+        return 'Tokens are dropped'
     raise Exception('Error at drop_token method: {} {}'.format(status, _))
 
 
@@ -102,28 +102,28 @@ def _get_token():
 
 
 def registration(question_location):
-    promt = "If you are not registered yet, answer the question '{0}': ".format(do_request(question_location)[0])
-    answer = input(promt)
-    responce, status = do_request(question_location, POST, {'answer': answer})    
+    prompt = "If you are not registered yet, answer the question '{0}': ".format(do_request(question_location)[0])
+    answer = input(prompt)
+    response, status = do_request(question_location, POST, {'answer': answer})
     if status == 202:
         return True
-    display(responce)
+    display(response)
     raise AuthenticationError
 
 
-def retry(responce):
-    return do_request(responce._attrs[0], *responce._attrs[1], **responce._attrs[2])
+def retry(response):
+    return do_request(response._attrs[0], *response._attrs[1], **response._attrs[2])
 
 
-def _get_credentions():
+def _get_credentials():
     password = get_options().password or getpass.getpass('Input your password: ')
     return get_options().user, password
-        
+
 
 def _get_user_agent():
     if get_options().anonymous:
         return _ANONYMOUS_USER_AGENT
-    return _generate_user_agent_with_info() 
+    return _generate_user_agent_with_info()
 
 
 def _generate_user_agent_with_info():
@@ -154,8 +154,8 @@ def _delete_token():
         os.remove(_TOKEN_PATH)
 
 
-def _get_encoding_basic_credentions():
-    return b'basic ' + base64.b64encode(':'.join(_get_credentions()).encode('ascii'))
+def _get_encoding_basic_credentials():
+    return b'basic ' + base64.b64encode(':'.join(_get_credentials()).encode('ascii'))
 
 
 def _get_headers():
@@ -166,7 +166,7 @@ def _get_headers():
     if token:
         headers[_TOKEN_HEADER] = b'token ' + token.encode('ascii')
     else:
-        headers[_AUTH_HEADER] = _get_encoding_basic_credentions()
+        headers[_AUTH_HEADER] = _get_encoding_basic_credentials()
     return headers
 
 
@@ -181,7 +181,7 @@ def _response_hendler(responce):
     if responce.status in [401, ]:
         raise AuthenticationError
     elif responce.status > 500:
-        raise ServerError 
+        raise ServerError
     elif responce.status in [301, 302, 303, 307]:
         if registration(responce.headers['Location']):
             return retry(responce)
@@ -213,26 +213,26 @@ def get_options_parser():
     parser = argparse.ArgumentParser(description='note some messages for share it throw machenes')
     parser.add_argument('note', metavar='NOTE', type=str, nargs='*',
                         help='New Note')
-    
+
     parser.add_argument('-u', '--user', help='username', type=str)
     parser.add_argument('-p', '--password', help='password', type=str)
     parser.add_argument('--host', default=_HOST, help='host (default: %s)' % _HOST, type=str)
-    
+
     parser.add_argument('-l', '--last', help='display only last note',
                         action='store_true')
     parser.add_argument('-n', '--num-note', help='display only note with given number', type=int)
     parser.add_argument('-d', '--drop-tokens', help='make all you tokens invalid',
                         action='store_true')
-    
+
     parser.add_argument('-s', '--save', help='enable to save token locally',
-                        action='store_true')    
+                        action='store_true')
     parser.add_argument('-c', '--color', help='enable colorized output',
                         action='store_true')
-    
+
     parser.add_argument('-a', '--anonymous', help='do not add OS and other info to agent header',
                         action='store_true')
     parser.add_argument('--report', help='report error', action='store_true')
-    
+
     parser.add_argument('-v', '--version', help='displays the current version of noteit',
                         action='store_true')
     return parser
@@ -262,7 +262,7 @@ def main():
             display(create_note(' '.join(options.note)))
         else:
             display(get_notes_list())
-        
+
         if options.drop_tokens:
             display(drop_tokens())
             _delete_token()
@@ -270,21 +270,21 @@ def main():
         if options.save:
             token = _get_token()
             if token:
-                _save_token(token)                
+                _save_token(token)
     except KeyboardInterrupt:
         display('\n')
     except AuthenticationError:
         display('Error at authentication')
     except ServerError:
         display('Sorry we have got server error. Please, try again later')
-    except Exception as e:
+    except Exception:
         if __DEBUG:
-            raise 
+            raise
         if not options.report:
             print('Something went wrong! You can sent report to us with "--report" option')
             return
         display(report(traceback.format_exc()))
-        
+
 
 if __name__ == '__main__':
     main()

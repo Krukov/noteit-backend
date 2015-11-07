@@ -22,9 +22,8 @@ class Note(models.Model):
 
 
 class Report(models.Model):
-	traceback = models.TextField(max_length=2**10-1)
-	info = models.TextField(max_length=2**8-1)
-	user = models.ForeignKey('users.User', blank=True, null=True)
+    traceback = models.TextField(max_length=2**10-1)
+    info = models.TextField(max_length=2**8-1)
+    user = models.ForeignKey('users.User', blank=True, null=True)
 
-	date_create = models.DateTimeField(auto_now_add=True)
-
+    date_create = models.DateTimeField(auto_now_add=True)

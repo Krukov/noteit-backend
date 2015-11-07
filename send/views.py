@@ -20,28 +20,29 @@ class ReportForm(ModelForm):
 
     class Meta:
         model = Report
-        fields = ['traceback',]
+        fields = ['traceback']
 
 
 class NoteView(View):
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, **kwargs):
         limit = self.get_limit()
         notes = request.user.notes.filter(is_active=True)[:limit]
         if not notes:
             return HttpResponse('Hello, you have not any notes. It can be created with POST request with "note" parameter at this path', status=204)
 
         if 'index' in kwargs and kwargs['index'] is not None and int(kwargs['index']) <= limit:
-            responce = notes[int(kwargs.get('index'))].text
+            response = notes[int(kwargs.get('index'))].text
         elif 'n' in request.GET and request.GET.get('n').isdigit() and int(request.GET.get('n')) <= limit:
-            responce = notes[int(request.GET.get('n')) - 1].text
+            response = notes[int(request.GET.get('n')) - 1].text
         elif 'l' in request.GET or 'last' in request.GET:
-            responce = notes[0].text
+            response = notes[0].text
         else:
-            responce = '\n'.join([TEMPLATE.format(i=i+1, text=note.text) for i, note in enumerate(notes)])
-        return HttpResponse(responce)
+            response = '\n'.join([TEMPLATE.format(i=i+1, text=note.text) for i, note in enumerate(notes)])
+        return HttpResponse(response)
 
-    def post(self, request, *args, **kwargs):
+    @staticmethod
+    def post(request, **kwargs):
         form = NoteForm(request.POST)
         if form.is_valid() and not kwargs.get('index', None):
             Note.objects.create(text=form.cleaned_data['note'], owner=request.user)
