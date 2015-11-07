@@ -9,7 +9,7 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase, LiveServerTestCase
 
 from send.models import Note
-from send.users.models import User, RegisterQuestion, Question, Token
+from send.users.models import User, RegisterQuestion, Question
 from client import noteit
 
 HTTP_HEADER_ENCODING = 'iso-8859-1'
@@ -96,9 +96,11 @@ class FunctionTestCase(TestCase):
         req = self.client.post(reverse('get_token'), **get_auth_header(**TEST_USER))
         self.assertEqual(req.status_code, 201, req)
         self.assertEqual(req.content.decode('ascii'), u.token.key, req)
-        # TODO: test request with token
 
-    def test_invalid_credantions(self):
+        self.client.post('/', data={'note': 'Test'}, HTTP_AUTHORIZATION='token ' + u.token.key)
+        self.assertEqual(Note.objects.filter(owner=u).last().text, 'Test')
+
+    def test_invalid_credentials(self):
         pass
 
     def test_invalid_note_number(self):
