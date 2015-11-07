@@ -61,9 +61,7 @@ class BasicAuthMiddleware:
             User.USERNAME_FIELD: user,
             'password': password
         }
-        try:
-            user = User.objects.get(**{User.USERNAME_FIELD: user})
-        except User.DoesNotExist:
+        if not User.objects.filter(**{User.USERNAME_FIELD: user}).exists():
             user = User.objects.create_user(**credentials)
             response = redirect(user.question.url())
             response.status_code = 303
