@@ -112,9 +112,10 @@ class ClientTestCase(LiveServerTestCase):
     def setUp(self):
         for i in range(10):
             Question.objects.create(text='What you see: {}'.format(i + 1), answer=str(i + 1))
-        self.user = User.objects.create_user(**TEST_USER)
+        self.user = User.objects.create_user(is_register=True, **TEST_USER)
         for i in range(10):
             Note.objects.create(text=str(i), owner=self.user)
+            time.sleep(0.1)
 
         options = namedtuple('OptionsMock', ['host', 'anonymous', 'user', 'password', 'save'])
         self._anonymous = False
@@ -144,7 +145,7 @@ class ClientTestCase(LiveServerTestCase):
     def test_send_report(self):
         pass
 
-    def test_anonymos_request(self):
+    def test_anonymous_request(self):
         pass
 
     def test_registration(self):
