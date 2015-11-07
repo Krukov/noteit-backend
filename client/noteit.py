@@ -185,8 +185,6 @@ def _response_hendler(responce):
     elif responce.status in [301, 302, 303, 307]:
         if registration(responce.headers['Location']):
             return retry(responce)
-    if _TOKEN_HEADER_IN_RESPONSE in responce.headers and get_options().save:
-        _save_token(responce.headers[_TOKEN_HEADER_IN_RESPONSE])
     return responce.read().decode('ascii'), responce.status
 
 
