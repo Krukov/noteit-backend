@@ -172,20 +172,20 @@ def _get_headers():
 
 def do_request(path, *args, **kwargs):
     kwargs.setdefault('headers', {}).update(_get_headers())
-    responce = _make_request(path, *args, **kwargs)
-    responce._attrs = path, args, kwargs
-    return _response_hendler(responce)
+    response = _make_request(path, *args, **kwargs)
+    response._attrs = path, args, kwargs
+    return _response_handler(response)
 
 
-def _response_hendler(responce):
-    if responce.status in [401, ]:
+def _response_handler(response):
+    if response.status in [401, ]:
         raise AuthenticationError
-    elif responce.status > 500:
+    elif response.status > 500:
         raise ServerError
-    elif responce.status in [301, 302, 303, 307]:
-        if registration(responce.headers['Location']):
-            return retry(responce)
-    return responce.read().decode('ascii'), responce.status
+    elif response.status in [301, 302, 303, 307]:
+        if registration(response.headers['Location']):
+            return retry(response)
+    return response.read().decode('ascii'), response.status
 
 
 def _get_connection():
