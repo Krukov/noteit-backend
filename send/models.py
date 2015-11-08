@@ -8,7 +8,6 @@ from django.db import models
 
 
 class Note(models.Model):
-    uuid = models.UUIDField(max_length=63, default=uuid4, unique=True, verbose_name='UUID')
     text = models.TextField(max_length=2**14-1, verbose_name='Note')
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='notes')
 
