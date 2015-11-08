@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import bleach
 from django.conf import settings
 from django.views.generic import View, CreateView
 from django.http import HttpResponse
@@ -9,7 +10,16 @@ from django.views.decorators.http import require_POST
 
 from .models import Note, Report
 
+
 TEMPLATE = '{i}: {text}'
+ALLOWED_TAGS = bleach.ALLOWED_TAGS + ['html', 'body', 'head', 'h1', 'h2', 'h3', 'h4', 'h5']
+ALLOWED_STYLES = ['color']
+
+ALLOWED_ATTRS = {}
+ALLOWED_ATTRS.update(bleach.ALLOWED_ATTRIBUTES)
+ALLOWED_ATTRS.update({
+    '*': ['style'],
+})
 
 
 class NoteForm(Form):
@@ -39,6 +49,7 @@ class NoteView(View):
             response = notes[0].text
         else:
             response = '\n'.join([TEMPLATE.format(i=i+1, text=note.text) for i, note in enumerate(notes)])
+        response = bleach.clean(response, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, styles=ALLOWED_STYLES)
         return HttpResponse(response)
 
     @staticmethod

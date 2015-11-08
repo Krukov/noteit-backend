@@ -9,7 +9,7 @@ from .users import urls
 
 urlpatterns = [
     url(r'^$', NoteView.as_view()),
-    url(r'^(?P<index>\d)/?$', NoteView.as_view()),
+    url(r'^(?P<index>[1-{}])/?$'.format(NoteView.get_limit()), NoteView.as_view()),
     url(r'^report/?$', report_view, name='report'),
     url(r'^', include(urls), name='notes'),
 ]
