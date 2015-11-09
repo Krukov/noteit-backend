@@ -124,22 +124,22 @@ class ClientTestCase(LiveServerTestCase):
         self._options.password = TEST_USER['password']
         self._options.host = self.live_server_url[7:]
         noteit.get_options = lambda: self._options
-        self.out = ''
-        noteit.display = lambda out: setattr(self, 'out', out)
+        self.out = []
+        noteit.display = lambda out: self.out.append(out)
         noteit._DEBUG = True
         noteit._TOKEN_PATH = tempfile.mktemp()
 
     def test_get_notes(self):
         expected = '1: 3\n2: 2\n3: 1\n4: 0'
         noteit.main()
-        self.assertEqual(self.out, expected)
+        self.assertEqual(self.out.pop(), expected)
 
     def test_get_note(self):
         for i in range(1, 5):
             expected = str(4 - i)
             self._options.num_note = i
             noteit.main()
-            self.assertEqual(self.out, expected)
+            self.assertEqual(self.out.pop(), expected)
 
 
     def test_invalid_note_number(self):
@@ -147,27 +147,27 @@ class ClientTestCase(LiveServerTestCase):
 
         self._options.num_note = 5
         noteit.main()
-        self.assertEqual(self.out, expected)
+        self.assertEqual(self.out.pop(), expected)
 
         self._options.num_note = 7
         noteit.main()
-        self.assertEqual(self.out, expected)
+        self.assertEqual(self.out.pop(), expected)
 
         self._options.num_note = 134
         noteit.main()
-        self.assertEqual(self.out, expected)
+        self.assertEqual(self.out.pop(), expected)
 
     def test_get_last_note(self):
         expected = '3'
         self._options.last = True
         noteit.main()
-        self.assertEqual(self.out, expected)
+        self.assertEqual(self.out.pop(), expected)
 
     def test_create_note(self):
         self._options.note = ['Hello']
         noteit.main()
         expected = 'Note saved'
-        self.assertEqual(self.out, expected)
+        self.assertEqual(self.out.pop(), expected)
         self.assertTrue(Note.objects.filter(owner=self.user, text='Hello').exists())
 
     def test_drop_token(self):
@@ -175,7 +175,8 @@ class ClientTestCase(LiveServerTestCase):
         old_key = self.user.token.key
         self._options.drop_tokens = True
         noteit.main()
-        self.assertEqual(self.out, expected)
+        self.assertEqual(self.out.pop(), '1: 3\n2: 2\n3: 1\n4: 0')
+        self.assertEqual(self.out.pop(), expected)
         self.assertNotEqual(Token.objects.get(user=self.user).key, old_key)
 
     def test_save_token(self):
@@ -207,7 +208,7 @@ class ClientTestCase(LiveServerTestCase):
         self._options.password = 'new'
         self._options.list = True
         noteit.main()
-        self.assertEqual(self.out, 'Error at authentication')
+        self.assertEqual(self.out.pop(), 'Error at authentication')
 
     def test_registration(self):
         self.assertFalse(User.objects.filter(username='new').exists())
@@ -218,4 +219,4 @@ class ClientTestCase(LiveServerTestCase):
         noteit.main()
 
         self.assertTrue(User.objects.filter(username='new', is_register=True).exists())
-        self.assertEqual(self.out, "You haven't notes")
+        self.assertEqual(self.out.pop(), "You haven't notes")
