@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import bleach
+from user_agents import parse
+
 from django.conf import settings
 from django.views.generic import View, CreateView
 from django.http import HttpResponse, Http404
@@ -11,6 +13,7 @@ from django.views.decorators.http import require_POST
 from .models import Note, Report
 
 
+OTHER = 'Other'
 TEMPLATE = '{i}: {text}'
 ALLOWED_TAGS = bleach.ALLOWED_TAGS + ['html', 'body', 'head', 'h1', 'h2', 'h3', 'h4', 'h5']
 ALLOWED_STYLES = ['color']
@@ -53,7 +56,9 @@ class NoteView(View):
             response = notes[0].text
         else:
             response = '\n'.join([TEMPLATE.format(i=i+1, text=note.text) for i, note in enumerate(notes)])
-        response = bleach.clean(response, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, styles=ALLOWED_STYLES)
+        ua = parse(request.META.get('HTTP_USER_AGENT', ''))
+        if ua.device.family != OTHER or ua.browser.family != OTHER:
+            response = bleach.clean(response, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, styles=ALLOWED_STYLES)
         return HttpResponse(response)
 
     @staticmethod

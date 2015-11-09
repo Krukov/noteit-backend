@@ -1,2 +1,4 @@
 Django>=1.9a1
 bleach
+ua-parser>=0.4,<0.5  # 0.5 broken
+user-agents
