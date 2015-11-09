@@ -19,7 +19,7 @@ except ImportError:
 # TODO: add logging and put it in report
 
 _DEBUG = False
-__VERSION__ = '0.5.0'
+__VERSION__ = '0.6.0'
 _ANONYMOUS_USER_AGENT = 'anonymous'
 _USER_AGENT = '{}'
 _HOST = '127.0.0.1:8000'
@@ -124,7 +124,7 @@ def retry(response):
 
 
 def _get_password():
-    if not hasattr(_get_password, '_password'):
+    if not hasattr(_get_password, '_password') or not _get_password._password:
         _get_password._password = get_options().password or getpass.getpass('Input your password: ')
     return _get_password._password
 
@@ -151,8 +151,8 @@ def _generate_user_agent_with_info():
 
 def _get_token_from_system():
     if os.path.isfile(_TOKEN_PATH):
-        with open(_TOKEN_PATH) as file:
-            return file.read().strip()
+        with open(_TOKEN_PATH) as _file:
+            return _file.read().strip()
 
 
 def _save_token(token):
@@ -197,8 +197,7 @@ def _response_handler(response):
     elif response.status > 500:
         raise ServerError
     elif response.status in [301, 302, 303, 307]:
-        headers = response.info()
-        if registration(headers.get('Location')):
+        if registration(response.getheader('Location')):
             return retry(response)
     return response.read().decode('ascii'), response.status
 

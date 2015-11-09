@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import os
 import base64
 import time
 import tempfile
@@ -127,7 +128,7 @@ class ClientTestCase(LiveServerTestCase):
         self.out = []
         noteit.display = lambda out: self.out.append(out)
         noteit._DEBUG = True
-        noteit._TOKEN_PATH = tempfile.mktemp()
+        noteit._TOKEN_PATH = os.path.join(tempfile.mktemp(), 'test.tkn')
 
     def test_get_notes(self):
         expected = '1: 3\n2: 2\n3: 1\n4: 0'
@@ -180,7 +181,8 @@ class ClientTestCase(LiveServerTestCase):
         self.assertNotEqual(Token.objects.get(user=self.user).key, old_key)
 
     def test_save_token(self):
-        self._options.save = True
+        noteit._get_password._password = None
+        self._options.save = True        
         noteit.main()
         self.assertEqual(noteit._get_token_from_system(), self.user.token.key)
         self._options.user = None
@@ -190,6 +192,7 @@ class ClientTestCase(LiveServerTestCase):
     def test_send_report(self):
         self.assertEqual(Report.objects.all().count(), 0)
         msg = 'test'
+        old = noteit.get_notes_list
         def _():
             raise Exception(msg)
         noteit.get_notes_list = _
@@ -199,24 +202,33 @@ class ClientTestCase(LiveServerTestCase):
         self.assertEqual(Report.objects.all().count(), 1)
         self.assertTrue(Report.objects.first().traceback)
         self.assertEqual(Report.objects.first().user, self.user)
+        noteit.get_notes_list = old
+        noteit._DEBUG = True
 
     def test_anonymous_request(self):
         self._options.anonymous = True
         self.assertEqual(noteit._get_user_agent(), noteit._ANONYMOUS_USER_AGENT)
 
     def test_invalid_password(self):
+        noteit._get_password._password = None
         self._options.password = 'new'
         self._options.list = True
         noteit.main()
         self.assertEqual(self.out.pop(), 'Error at authentication')
+        self._options.password = TEST_USER['password']
 
     def test_registration(self):
         self.assertFalse(User.objects.filter(username='new').exists())
         self._options.user = 'new'
         self._options.password = 'new'
+        old = noteit._get_from_stdin
         noteit._get_from_stdin = lambda _: self.answer
 
         noteit.main()
 
         self.assertTrue(User.objects.filter(username='new', is_register=True).exists())
         self.assertEqual(self.out.pop(), "You haven't notes")
+        noteit._get_from_stdin = old
+        self._options.user = TEST_USER['username']
+        self._options.password = TEST_USER['password']
+        
