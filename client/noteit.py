@@ -152,7 +152,7 @@ def _get_token_from_system():
 def _save_token(token):
     if not os.path.exists(os.path.dirname(_TOKEN_PATH)):
         os.makedirs(os.path.dirname(_TOKEN_PATH))
-    with open(_TOKEN_PATH, 'a') as token_file:
+    with open(_TOKEN_PATH, 'w') as token_file:
         token_file.write(token)
     return True
 
@@ -260,6 +260,15 @@ def main():
                 get_options_parser().print_help()
                 return
 
+        if options.drop_tokens:
+            display(drop_tokens())
+            _delete_token()
+
+        if options.save:
+            token = _get_token()
+            if token:
+                _save_token(token)
+
         if options.num_note:
             display(get_note(options.num_note))
         elif options.last:
@@ -269,14 +278,6 @@ def main():
         else:
             display(get_notes_list())
 
-        if options.drop_tokens:
-            display(drop_tokens())
-            _delete_token()
-
-        if options.save:
-            token = _get_token()
-            if token:
-                _save_token(token)
     except KeyboardInterrupt:
         display('\n')
     except AuthenticationError:

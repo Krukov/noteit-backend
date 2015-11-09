@@ -182,6 +182,9 @@ class ClientTestCase(LiveServerTestCase):
         self._options.save = True
         noteit.main()
         self.assertEqual(noteit._get_token_from_system(), self.user.token.key)
+        self._options.user = None
+        self._options.password = None
+        self.test_get_notes()
 
     def test_send_report(self):
         self.assertEqual(Report.objects.all().count(), 0)
