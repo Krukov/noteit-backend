@@ -18,7 +18,7 @@ except ImportError:
 
 # TODO: add logging and put it in report
 
-__DEBUG = False
+_DEBUG = False
 __VERSION__ = '0.5.0'
 _ANONYMOUS_USER_AGENT = 'anonymous'
 _USER_AGENT = '{}'
@@ -60,6 +60,8 @@ def get_notes_list():
     notes, status = do_request(_URLS_MAP['get_notes'])
     if status == 200:
         return notes
+    elif status == 204:
+        return "You haven't notes"
     raise Exception('Error at get_notes method: {} {}'.format(status, notes))
 
 
@@ -67,6 +69,8 @@ def get_note(number):
     note, status = do_request(_URLS_MAP['get_note'].format(i=number))
     if status == 200:
         return note
+    elif status == 404:
+        return "No note with given number"
     raise Exception('Error at get_note method: {} {}'.format(status, note))
 
 
@@ -101,9 +105,13 @@ def _get_token():
         return token
 
 
+def _get_from_stdin(text):
+    return input(text)
+
+
 def registration(question_location):
     prompt = "If you are not registered yet, answer the question '{0}': ".format(do_request(question_location)[0])
-    answer = input(prompt)
+    answer = _get_from_stdin(prompt)
     response, status = do_request(question_location, POST, {'answer': answer})
     if status == 202:
         return True
@@ -163,7 +171,7 @@ def _get_headers():
         _USER_AGENT_HEADER: _get_user_agent(),
     }
     token = _get_token_from_system()
-    if token:
+    if token and not get_options().user:
         headers[_TOKEN_HEADER] = b'token ' + token.encode('ascii')
     else:
         headers[_AUTH_HEADER] = _get_encoding_basic_credentials()
@@ -276,7 +284,7 @@ def main():
     except ServerError:
         display('Sorry we have got server error. Please, try again later')
     except Exception:
-        if __DEBUG:
+        if _DEBUG:
             raise
         if not options.report:
             print('Something went wrong! You can sent report to us with "--report" option')
