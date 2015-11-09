@@ -123,8 +123,14 @@ def retry(response):
     return do_request(response._attrs[0], *response._attrs[1], **response._attrs[2])
 
 
+def _get_password():
+    if not hasattr(_get_password, '_password'):
+        _get_password._password = get_options().password or getpass.getpass('Input your password: ')
+    return _get_password._password
+
+
 def _get_credentials():
-    password = get_options().password or getpass.getpass('Input your password: ')
+    password = _get_password() 
     return get_options().user, password
 
 
@@ -191,7 +197,8 @@ def _response_handler(response):
     elif response.status > 500:
         raise ServerError
     elif response.status in [301, 302, 303, 307]:
-        if registration(response.headers['Location']):
+        headers = response.info()
+        if registration(headers.get('Location')):
             return retry(response)
     return response.read().decode('ascii'), response.status
 
