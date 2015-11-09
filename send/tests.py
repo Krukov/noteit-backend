@@ -3,13 +3,14 @@
 
 import base64
 import time
+import tempfile
 from collections import namedtuple
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase, LiveServerTestCase
 
-from send.models import Note
-from send.users.models import User, RegisterQuestion, Question
+from send.models import Note, Report
+from send.users.models import User, RegisterQuestion, Question, Token
 from client import noteit
 
 HTTP_HEADER_ENCODING = 'iso-8859-1'
@@ -33,7 +34,7 @@ class FunctionTestCase(TestCase):
 
     def test_registration(self):
         first = self.client.get('/', **get_auth_header(**TEST_USER))
-        self.assertEqual(first.status_code, 303)  # TODO: 303 ? or 307?
+        self.assertEqual(first.status_code, 303)
         self.assertTrue(User.objects.filter(username=TEST_USER['username']).first())
 
         uuid = first['location'].split('/')[-2]
@@ -100,53 +101,118 @@ class FunctionTestCase(TestCase):
         self.client.post('/', data={'note': 'Test'}, HTTP_AUTHORIZATION='token ' + u.token.key)
         self.assertEqual(Note.objects.filter(owner=u).last().text, 'Test')
 
-    def test_invalid_credentials(self):
-        pass
-
-    def test_invalid_note_number(self):
-        pass
-
 
 class ClientTestCase(LiveServerTestCase):
 
     def setUp(self):
-        for i in range(10):
-            Question.objects.create(text='What you see: {}'.format(i + 1), answer=str(i + 1))
+        self.answer = '1'
+        Question.objects.create(text='What do you see: {}'.format(self.answer), answer=self.answer)
         self.user = User.objects.create_user(is_register=True, **TEST_USER)
-        for i in range(10):
+        for i in range(4):
             Note.objects.create(text=str(i), owner=self.user)
             time.sleep(0.1)
 
-        options = namedtuple('OptionsMock', ['host', 'anonymous', 'user', 'password', 'save'])
-        self._anonymous = False
-        self._save = False
-        self.user = TEST_USER['username']
-        self.password = TEST_USER['password']
-        noteit.get_options = lambda: options(self.live_server_url[7:], self._anonymous, self.user, self.password, self._save)
+        Options = type('OptionsMock', (), {})
+        def getattr(s, attr):
+            if attr not in s.__dict__:
+                return False
+            return super(Options, s).__getattr__(attr)
+        Options.__getattr__ = getattr
+
+        self._options = Options()
+        self._options.user = TEST_USER['username']
+        self._options.password = TEST_USER['password']
+        self._options.host = self.live_server_url[7:]
+        noteit.get_options = lambda: self._options
+        self.out = ''
+        noteit.display = lambda out: setattr(self, 'out', out)
+        noteit._DEBUG = True
+        noteit._TOKEN_PATH = tempfile.mktemp()
 
     def test_get_notes(self):
-        expected = '1: 9\n2: 8\n3: 7\n4: 6\n5: 5'
-        self.assertEqual(noteit.get_notes_list(), expected)
+        expected = '1: 3\n2: 2\n3: 1\n4: 0'
+        noteit.main()
+        self.assertEqual(self.out, expected)
 
     def test_get_note(self):
-        expected = '7'
-        self.assertEqual(noteit.get_note(3), expected)
+        for i in range(1, 5):
+            expected = str(4 - i)
+            self._options.num_note = i
+            noteit.main()
+            self.assertEqual(self.out, expected)
+
+
+    def test_invalid_note_number(self):
+        expected = "No note with given number"
+
+        self._options.num_note = 5
+        noteit.main()
+        self.assertEqual(self.out, expected)
+
+        self._options.num_note = 7
+        noteit.main()
+        self.assertEqual(self.out, expected)
+
+        self._options.num_note = 134
+        noteit.main()
+        self.assertEqual(self.out, expected)
 
     def test_get_last_note(self):
-        expected = '9'
-        self.assertEqual(noteit.get_last_note(), expected)
+        expected = '3'
+        self._options.last = True
+        noteit.main()
+        self.assertEqual(self.out, expected)
+
+    def test_create_note(self):
+        self._options.note = ['Hello']
+        noteit.main()
+        expected = 'Note saved'
+        self.assertEqual(self.out, expected)
+        self.assertTrue(Note.objects.filter(owner=self.user, text='Hello').exists())
 
     def test_drop_token(self):
-        pass
+        expected = 'Tokens are dropped'
+        old_key = self.user.token.key
+        self._options.drop_tokens = True
+        noteit.main()
+        self.assertEqual(self.out, expected)
+        self.assertNotEqual(Token.objects.get(user=self.user).key, old_key)
 
     def test_save_token(self):
-        pass
+        self._options.save = True
+        noteit.main()
+        self.assertEqual(noteit._get_token_from_system(), self.user.token.key)
 
     def test_send_report(self):
-        pass
+        self.assertEqual(Report.objects.all().count(), 0)
+        msg = 'test'
+        def _():
+            raise Exception(msg)
+        noteit.get_notes_list = _
+        self._options.report = True
+        noteit._DEBUG = False
+        noteit.main()
+        self.assertEqual(Report.objects.all().count(), 1)
+        self.assertTrue(Report.objects.first().traceback)
+        self.assertEqual(Report.objects.first().user, self.user)
 
     def test_anonymous_request(self):
-        pass
+        self._options.anonymous = True
+        self.assertEqual(noteit._get_user_agent(), noteit._ANONYMOUS_USER_AGENT)
+
+    def test_invalid_password(self):
+        self._options.password = 'new'
+        self._options.list = True
+        noteit.main()
+        self.assertEqual(self.out, 'Error at authentication')
 
     def test_registration(self):
-        pass
+        self.assertFalse(User.objects.filter(username='new').exists())
+        self._options.user = 'new'
+        self._options.password = 'new'
+        noteit._get_from_stdin = lambda _: self.answer
+
+        noteit.main()
+
+        self.assertTrue(User.objects.filter(username='new', is_register=True).exists())
+        self.assertEqual(self.out, "You haven't notes")
