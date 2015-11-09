@@ -4,7 +4,7 @@
 import bleach
 from django.conf import settings
 from django.views.generic import View, CreateView
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.forms import Form, CharField, ModelForm
 from django.views.decorators.http import require_POST
 
@@ -42,8 +42,12 @@ class NoteView(View):
             return HttpResponse('Hello, you have not any notes. It can be created with POST request with "note" parameter at this path', status=204)
 
         if 'index' in kwargs and kwargs['index'] is not None and int(kwargs['index']) <= limit:
+            if len(notes) < int(kwargs['index']):
+                raise Http404
             response = notes[int(kwargs.get('index')) - 1].text
         elif 'n' in request.GET and request.GET.get('n').isdigit() and int(request.GET.get('n')) <= limit:
+            if len(notes) < int(request.GET.get('n')):
+                raise Http404
             response = notes[int(request.GET.get('n')) - 1].text
         elif 'l' in request.GET or 'last' in request.GET:
             response = notes[0].text
