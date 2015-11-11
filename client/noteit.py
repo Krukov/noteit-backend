@@ -16,7 +16,6 @@ except ImportError:
     from http.client import HTTPConnection  # Py>=3
     from urllib.parse import urlencode
 
-# TODO: add logging and put it in report
 
 _DEBUG = False
 __VERSION__ = '0.6.0'
@@ -28,7 +27,6 @@ _TOKEN_PATH = os.path.expanduser('~/.noteit/noteit.tkn')
 _USER_AGENT_HEADER = 'User-Agent'
 _AUTH_HEADER = 'Authorization'
 _TOKEN_HEADER = 'Authorization'
-_TOKEN_HEADER_IN_RESPONSE = ''
 GET, POST, PUT = 'GET', 'POST', 'PUT'
 _URLS_MAP = {
     'create_note': '/',
@@ -41,11 +39,23 @@ _URLS_MAP = {
 
 
 class AuthenticationError(Exception):
-    pass
+    """Error raising at wrong password """
 
 
 class ServerError(Exception):
-    pass
+    """Error if server is retunr 50x status"""
+
+
+def cached_function(func):
+    """Decorator that chache function result at first call and return cached result other calls """
+    _CACHED_ATTR = '_cache'
+    def _func(*args, **kwargs):
+        if hasattr(func, _CACHED_ATTR) and getattr(func, _CACHED_ATTR) is not None:
+            return getattr(func, _CACHED_ATTR)
+        result = func(*args, **kwargs)
+        setattr(func, _CACHED_ATTR, result)
+        return result
+    return _func
 
 
 def display(out, stdout=sys.stdout):
@@ -53,10 +63,12 @@ def display(out, stdout=sys.stdout):
 
 
 def get_version():
+    """Return version of client"""
     return __VERSION__
 
 
-def get_notes_list():
+def get_notes():
+    """Return user's notes as string"""
     notes, status = do_request(_URLS_MAP['get_notes'])
     if status == 200:
         return notes
@@ -66,6 +78,7 @@ def get_notes_list():
 
 
 def get_note(number):
+    """Return user note of given number (number in [1..5])"""
     note, status = do_request(_URLS_MAP['get_note'].format(i=number))
     if status == 200:
         return note
@@ -75,10 +88,12 @@ def get_note(number):
 
 
 def get_last_note():
+    """Return last saved note"""
     return get_note(1)
 
 
 def create_note(note):
+    """Make request for saving note"""
     _, status = do_request(_URLS_MAP['get_notes'], method=POST, data={'note': note})
     if status == 201:
         return 'Note saved'
@@ -86,6 +101,7 @@ def create_note(note):
 
 
 def report(tb):
+    """Make traceback and etc. to server"""
     _, status = do_request(_URLS_MAP['report'], method=POST, data={'traceback': tb})
     if status == 201:
         return 'Thanks you for reporting...'
@@ -93,6 +109,7 @@ def report(tb):
 
 
 def drop_tokens():
+    """Make request to recreate user's tokens"""
     _, status = do_request(_URLS_MAP['drop_tokens'], method=POST)
     if status == 202:
         return 'Tokens are dropped'
@@ -100,47 +117,54 @@ def drop_tokens():
 
 
 def _get_token():
+    """Send request to get token and return it at success"""
     token, status = do_request(_URLS_MAP['get_token'], method=POST)
     if status == 201:
         return token
 
 
 def _get_from_stdin(text):
+    """communicate with stdin"""
     return input(text)
 
 
 def registration(question_location):
+    """Acsc user for answer the question at given location and send result """
     prompt = "If you are not registered yet, answer the question '{0}': ".format(do_request(question_location)[0])
     answer = _get_from_stdin(prompt)
     response, status = do_request(question_location, POST, {'answer': answer})
     if status == 202:
         return True
-    display(response)
-    raise AuthenticationError
+    return False
 
 
 def retry(response):
+    """Retry last response"""
     return do_request(response._attrs[0], *response._attrs[1], **response._attrs[2])
 
 
+@cached_function
 def _get_password():
-    if not hasattr(_get_password, '_password') or not _get_password._password:
-        _get_password._password = get_options().password or getpass.getpass('Input your password: ')
-    return _get_password._password
+    """Return password from cache or from args or ascs user for it"""
+    return get_options().password or getpass.getpass('Input your password: ')
 
 
 def _get_credentials():
+    """Return username from args and password"""
     password = _get_password() 
     return get_options().user, password
 
 
 def _get_user_agent():
+    """Return User-Agent for request header"""
     if get_options().anonymous:
         return _ANONYMOUS_USER_AGENT
     return _generate_user_agent_with_info()
 
 
+@cached_function
 def _generate_user_agent_with_info():
+    """Generete User-Agent with enveroupment info"""
     return ' '.join([
         platform.platform(),
         platform.python_implementation(),
@@ -149,13 +173,16 @@ def _generate_user_agent_with_info():
     ])
 
 
+@cached_function
 def _get_token_from_system():
+    """Return tocken from file"""
     if os.path.isfile(_TOKEN_PATH):
         with open(_TOKEN_PATH) as _file:
             return _file.read().strip()
 
 
 def _save_token(token):
+    """Save tocken to file"""
     if not os.path.exists(os.path.dirname(_TOKEN_PATH)):
         os.makedirs(os.path.dirname(_TOKEN_PATH))
     with open(_TOKEN_PATH, 'w') as token_file:
@@ -164,15 +191,18 @@ def _save_token(token):
 
 
 def _delete_token():
+    """Delete file with token"""
     if os.path.exists(_TOKEN_PATH):
         os.remove(_TOKEN_PATH)
 
 
 def _get_encoding_basic_credentials():
+    """Return value of header for Basic Authentication"""
     return b'basic ' + base64.b64encode(':'.join(_get_credentials()).encode('ascii'))
 
 
 def _get_headers():
+    """Return dict of headers for request"""
     headers = {
         _USER_AGENT_HEADER: _get_user_agent(),
     }
@@ -185,6 +215,7 @@ def _get_headers():
 
 
 def do_request(path, *args, **kwargs):
+    """Make request and handle response"""
     kwargs.setdefault('headers', {}).update(_get_headers())
     response = _make_request(path, *args, **kwargs)
     response._attrs = path, args, kwargs
@@ -192,6 +223,7 @@ def do_request(path, *args, **kwargs):
 
 
 def _response_handler(response):
+    """Handle response status"""
     if response.status in [401, ]:
         raise AuthenticationError
     elif response.status > 500:
@@ -199,14 +231,18 @@ def _response_handler(response):
     elif response.status in [301, 302, 303, 307]:
         if registration(response.getheader('Location')):
             return retry(response)
+        raise AuthenticationError
     return response.read().decode('ascii'), response.status
 
 
+@cached_function
 def _get_connection():
+    """Create and return conection with host"""
     return HTTPConnection(get_options().host)
 
 
 def _make_request(url, method=GET, data=None, headers=None):
+    """Generate request and send it"""
     headers = headers or {}
     method = method.upper()
     conn = _get_connection()
@@ -222,6 +258,7 @@ def _make_request(url, method=GET, data=None, headers=None):
 
 
 def get_options_parser():
+    """Arguments deffinition"""
     parser = argparse.ArgumentParser(description='note some messages for share it throw machenes')
     parser.add_argument('note', metavar='NOTE', type=str, nargs='*',
                         help='New Note')
@@ -250,11 +287,14 @@ def get_options_parser():
     return parser
 
 
+@cached_function
 def get_options():
+    """Return parsed arguments"""
     return get_options_parser().parse_args()
 
 
 def main():
+    """Main"""
     options = get_options()
     try:
         if options.version:
@@ -282,7 +322,7 @@ def main():
         elif options.note:
             display(create_note(' '.join(options.note)))
         else:
-            display(get_notes_list())
+            display(get_notes())
 
     except KeyboardInterrupt:
         display('\n')

@@ -192,17 +192,17 @@ class ClientTestCase(LiveServerTestCase):
     def test_send_report(self):
         self.assertEqual(Report.objects.all().count(), 0)
         msg = 'test'
-        old = noteit.get_notes_list
+        old = noteit.get_notes
         def _():
             raise Exception(msg)
-        noteit.get_notes_list = _
+        noteit.get_notes = _
         self._options.report = True
         noteit._DEBUG = False
         noteit.main()
         self.assertEqual(Report.objects.all().count(), 1)
         self.assertTrue(Report.objects.first().traceback)
         self.assertEqual(Report.objects.first().user, self.user)
-        noteit.get_notes_list = old
+        noteit.get_notes = old
         noteit._DEBUG = True
 
     def test_anonymous_request(self):
@@ -210,12 +210,13 @@ class ClientTestCase(LiveServerTestCase):
         self.assertEqual(noteit._get_user_agent(), noteit._ANONYMOUS_USER_AGENT)
 
     def test_invalid_password(self):
-        noteit._get_password._password = None
-        self._options.password = 'new'
+        old = noteit._get_password
+        noteit._get_password = lambda: 'new'
         self._options.list = True
         noteit.main()
         self.assertEqual(self.out.pop(), 'Error at authentication')
         self._options.password = TEST_USER['password']
+        noteit._get_password = old
 
     def test_registration(self):
         self.assertFalse(User.objects.filter(username='new').exists())
