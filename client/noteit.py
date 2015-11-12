@@ -6,6 +6,7 @@ import base64
 import getpass
 import os
 import platform
+import select
 import sys
 import traceback
 
@@ -62,6 +63,7 @@ def display(out, stdout=sys.stdout):
     stdout.write(out + '\n')
 
 
+@cached_function
 def get_version():
     """Return version of client"""
     return __VERSION__
@@ -260,7 +262,7 @@ def _make_request(url, method=GET, data=None, headers=None):
 def get_options_parser():
     """Arguments deffinition"""
     parser = argparse.ArgumentParser(description='note some messages for share it throw machenes')
-    parser.add_argument('note', metavar='NOTE', type=str, nargs='*',
+    parser.add_argument('note', metavar='NOTE', type=str, nargs='*', default=sys.stdin.read() if select.select([sys.stdin,],[],[],0.0)[0] else None,
                         help='New Note')
 
     parser.add_argument('-u', '--user', help='username', type=str)
