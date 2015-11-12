@@ -13,3 +13,5 @@ dist
 *.db
 *.pyc
 .vscode
+*.egg-info/
+build/
