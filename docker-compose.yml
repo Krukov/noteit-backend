@@ -1,0 +1,37 @@
+#python:
+#  image: elyase/pyrun:3.4
+
+# http://oliverguenther.de/2015/05/docker-containers-for-development/
+datastore:
+  image: busybox
+  volumes:
+      - ./.dockerfiles/postgresql:/usr/local/pgsql/data
+      - ./.dockerfiles/postgresql:/var/lib/postgresql
+
+db:
+  restart: always
+  image: postgres
+  volumes_from:
+    - datastore
+
+web:
+  restart: always
+  build: .
+  volumes:
+    - .:/code
+  command: /usr/local/bin/gunicorn --bind=0.0.0.0:8000 --workers=4 wsgi
+  environment:
+    - DJANGO_SETTINGS_MODULE=settings.production
+  links:
+    - db
+
+nginx:
+  restart: always
+  build: ./nginx
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - ./dist:/tmp/app
+  links:
+    - web:web
