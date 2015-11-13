@@ -213,18 +213,17 @@ class ClientTestCase(LiveServerTestCase):
         self.assertEqual(noteit._get_user_agent(), noteit._ANONYMOUS_USER_AGENT)
 
     def test_invalid_password(self):
-        old = noteit._get_password
-        noteit._get_password = lambda: 'new'
         self._options.list = True
         noteit.main()
         self.assertEqual(self.out.pop(), 'Error at authentication')
         self._options.password = TEST_USER['password']
-        noteit._get_password = old
-
+        
     def test_registration(self):
         self.assertFalse(User.objects.filter(username='new').exists())
+        
         self._options.user = 'new'
         self._options.password = 'new'
+        
         old = noteit._get_from_stdin
         noteit._get_from_stdin = lambda _: self.answer
 

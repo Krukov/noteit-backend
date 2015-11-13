@@ -51,7 +51,7 @@ def cached_function(func):
     """Decorator that chache function result at first call and return cached result other calls """
     _CACHED_ATTR = '_cache'
     def _func(*args, **kwargs):
-        if hasattr(func, _CACHED_ATTR) and getattr(func, _CACHED_ATTR) is not None:
+        if hasattr(func, _CACHED_ATTR) and getattr(func, _CACHED_ATTR) is not None and not _DEBUG:
             return getattr(func, _CACHED_ATTR)
         result = func(*args, **kwargs)
         setattr(func, _CACHED_ATTR, result)
@@ -126,12 +126,12 @@ def _get_token():
 
 
 def _get_from_stdin(text):
-    """communicate with stdin"""
+    """communication with stdin"""
     return input(text)
 
 
 def registration(question_location):
-    """Acsc user for answer the question at given location and send result """
+    """Asks user for answer the question at given location and send result """
     prompt = "If you are not registered yet, answer the question '{0}': ".format(do_request(question_location)[0])
     answer = _get_from_stdin(prompt)
     response, status = do_request(question_location, POST, {'answer': answer})
@@ -147,14 +147,19 @@ def retry(response):
 
 @cached_function
 def _get_password():
-    """Return password from cache or from args or ascs user for it"""
+    """Return password from argument or asks user for it"""
     return get_options().password or getpass.getpass('Input your password: ')
 
 
+@cached_function
+def _get_user():
+    """Return user from argument or asks user for it"""
+    return get_options().user or _get_from_stdin('Input username: ')
+
+
 def _get_credentials():
-    """Return username from args and password"""
-    password = _get_password() 
-    return get_options().user, password
+    """Return username and password"""
+    return _get_user(), _get_password()
 
 
 def _get_user_agent():
@@ -301,12 +306,7 @@ def main():
         if options.version:
             display(get_version())
             return
-        if not _get_token_from_system() or options.ignore:
-            if not options.user:
-                display('You mast set "--user" option to use service')
-                get_options_parser().print_help()
-                return
-
+        
         if options.drop_tokens:
             display(drop_tokens())
             _delete_token()
