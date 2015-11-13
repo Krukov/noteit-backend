@@ -10,8 +10,8 @@ from collections import namedtuple
 from django.core.urlresolvers import reverse
 from django.test import TestCase, LiveServerTestCase
 
-from send.models import Note, Report
-from send.users.models import User, RegisterQuestion, Question, Token
+from backend.models import Note, Report
+from backend.auth_app.models import User, RegisterQuestion, Question, Token
 from client import noteit
 
 HTTP_HEADER_ENCODING = 'iso-8859-1'

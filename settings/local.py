@@ -15,8 +15,6 @@ INSTALLED_APPS = (
     'django_extensions',
 )
 
-AUTH_USER_MODEL = 'auth.User'
-
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -31,7 +29,7 @@ STATIC_ROOT = 'static'
 STATIC_URL = '/static/'
 MEDIA_ROOT = 'media'
 MEDIA_URL = '/media/'
-ROOT_URLCONF = 'send.urls_local'
+ROOT_URLCONF = 'backend.urls_local'
 
 DATABASES = {
     'default': {
