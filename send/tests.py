@@ -124,6 +124,8 @@ class ClientTestCase(LiveServerTestCase):
         self._options.user = TEST_USER['username']
         self._options.password = TEST_USER['password']
         self._options.host = self.live_server_url[7:]
+        self._options.ignore = True
+        self._options.do_not_save = True
         noteit.get_options = lambda: self._options
         self.out = []
         noteit.display = lambda out: self.out.append(out)
@@ -182,11 +184,12 @@ class ClientTestCase(LiveServerTestCase):
 
     def test_save_token(self):
         noteit._get_password._password = None
-        self._options.save = True        
+        self._options.do_not_save = False
         noteit.main()
         self.assertEqual(noteit._get_token_from_system(), self.user.token.key)
         self._options.user = None
         self._options.password = None
+        self._options.ignore = False
         self.test_get_notes()
 
     def test_send_report(self):
