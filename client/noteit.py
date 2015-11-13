@@ -275,7 +275,7 @@ def get_options_parser():
     parser.add_argument('-d', '--drop-tokens', help='make all you tokens invalid',
                         action='store_true')
 
-    parser.add_argument('-s', '--save', help='enable to save token locally',
+    parser.add_argument('--do-not-save', help='disable to save token locally',
                         action='store_true')
 
     parser.add_argument('-a', '--anonymous', help='do not add OS and other info to agent header',
@@ -310,7 +310,7 @@ def main():
             display(drop_tokens())
             _delete_token()
 
-        if options.save:
+        if not options.do_not_save:
             token = _get_token()
             if token:
                 _save_token(token)
