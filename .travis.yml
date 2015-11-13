@@ -7,7 +7,7 @@ python:
 install:
   - pip install -r requirements/test.txt
 
-script: coverage run --source='.' manage.py test send --settings=settings.test
+script: coverage run --source='.' manage.py test backend --settings=settings.test
 
 after_success:
   - coverage report

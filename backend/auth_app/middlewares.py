@@ -3,7 +3,6 @@
 
 import base64
 
-from django.contrib.auth import authenticate
 from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
 from django.shortcuts import redirect
@@ -61,15 +60,15 @@ class BasicAuthMiddleware:
             User.USERNAME_FIELD: user,
             'password': password
         }
-        if not User.objects.filter(**{User.USERNAME_FIELD: user}).exists():
+        user = User.objects.filter(**{User.USERNAME_FIELD: user}).first()
+        if user is None:
             user = User.objects.create_user(**credentials)
             response = redirect(user.question.url())
             response.status_code = 303
             return response
         else:
-            user = authenticate(**credentials)
 
-            if user is None:
+            if not user.check_password(password):
                 return self.not_auth(_('Invalid username/password.'))
 
             if not user.is_active:
@@ -105,7 +104,6 @@ class TokenAuthentication:
             key = auth[1].decode()
         except UnicodeError:
             return self.not_auth(_('Invalid token header. Token string should not contain invalid characters.'))
-
         try:
             token = Token.objects.select_related('user').get(key=key)
         except Token.DoesNotExist:

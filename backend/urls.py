@@ -4,7 +4,7 @@
 from django.conf.urls import include, url
 
 from .views import NoteView, report_view
-from .users import urls
+from .auth_app import urls
 
 
 urlpatterns = [

@@ -13,15 +13,27 @@ from django.core import validators
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
+
+from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class UserManager(BaseUserManager):
+
+    def create_user(self, username, password, **extra_fields):
+        if not username:
+            raise ValueError('The given username must be set')
+        user = self.model(username=username, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+
+class User(AbstractBaseUser):
     username = models.CharField(_('username'), max_length=30, unique=True,
         help_text=_('Required. 30 characters or fewer. Letters, digits and '
                     '@/./+/-/_ only.'),
         validators=[
-            validators.RegexValidator(r'^[\w.@+-]+$',
+            validators.RegexValidator(r'^[\w.@+-]{4,30}$',
                                       _('Enter a valid username. '
                                         'This value may contain only letters, numbers '
                                         'and @/./+/-/_ characters.'), 'invalid'),
@@ -29,10 +41,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         error_messages={
             'unique': _("A user with that username already exists."),
         })
-    email = models.EmailField(_('email address'), blank=True)
-    is_staff = models.BooleanField(_('staff status'), default=False,
-        help_text=_('Designates whether the user can log into this admin '
-                    'site.'))
     is_active = models.BooleanField(_('active'), default=True,
         help_text=_('Designates whether this user should be treated as '
                     'active. Unselect this instead of deleting accounts.'))
@@ -43,17 +51,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
-
+    
     class Meta:
-        verbose_name = _('user')
-        verbose_name_plural = _('users')
-
-    def get_full_name(self):
-        return self.username
-
-    def get_short_name(self):
-        return self.username
+        verbose_name = _('app user')
+        verbose_name_plural = _('app users')
 
     @cached_property
     def question(self):

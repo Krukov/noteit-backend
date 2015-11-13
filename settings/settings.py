@@ -5,21 +5,19 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file_
 DEBUG = False
 
 INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'send',
-    'send.users',
+    'backend',
+    'backend.auth_app',
 )
 
-AUTH_USER_MODEL = 'users.User'
+APP_USER_MODEL = 'auth_app.User'
 
 MIDDLEWARE_CLASSES = (
-    'send.users.middlewares.TokenAuthentication',
-    'send.users.middlewares.BasicAuthMiddleware',
+    'backend.auth_app.middlewares.TokenAuthentication',
+    'backend.auth_app.middlewares.BasicAuthMiddleware',
     'django.middleware.security.SecurityMiddleware',
 )
 
-ROOT_URLCONF = 'send.urls'
+ROOT_URLCONF = 'backend.urls'
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'

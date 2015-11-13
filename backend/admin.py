@@ -3,7 +3,7 @@
 
 from django.contrib.admin import register, ModelAdmin
 from . import models
-from .users.models import Token, User, Question, RegisterQuestion
+from .auth_app.models import Token, User, Question, RegisterQuestion
 
 
 @register(models.Report)

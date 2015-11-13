@@ -4,7 +4,8 @@ SECRET_KEY = 'local'
 
 
 INSTALLED_APPS = (
-    # 'jet',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
     'django.contrib.admin',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -28,7 +29,7 @@ STATIC_ROOT = 'static'
 STATIC_URL = '/static/'
 MEDIA_ROOT = 'media'
 MEDIA_URL = '/media/'
-ROOT_URLCONF = 'send.urls_local'
+ROOT_URLCONF = 'backend.urls_local'
 
 DATABASES = {
     'default': {
