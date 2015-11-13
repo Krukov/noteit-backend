@@ -4,7 +4,8 @@ SECRET_KEY = 'local'
 
 
 INSTALLED_APPS = (
-    # 'jet',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
     'django.contrib.admin',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -13,6 +14,8 @@ INSTALLED_APPS = (
 ) + INSTALLED_APPS + (
     'django_extensions',
 )
+
+AUTH_USER_MODEL = 'auth.User'
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',

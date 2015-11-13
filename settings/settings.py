@@ -5,13 +5,11 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file_
 DEBUG = False
 
 INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
     'send',
     'send.users',
 )
 
-AUTH_USER_MODEL = 'users.User'
+APP_USER_MODEL = 'users.User'
 
 MIDDLEWARE_CLASSES = (
     'send.users.middlewares.TokenAuthentication',
