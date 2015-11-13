@@ -288,7 +288,7 @@ def get_options_parser():
     parser.add_argument('-i', '--ignore', help='if set, client will skip local token',
                         action='store_true')
 
-    parser.add_argument('-a', '--anonymous', help='do not add OS and other info to agent header',
+    parser.add_argument('--anon', help='do not add OS and other info to agent header',
                         action='store_true')
     parser.add_argument('--report', help='report error', action='store_true')
 
