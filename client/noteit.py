@@ -18,7 +18,7 @@ except ImportError:
     from urllib.parse import urlencode
 
 
-_DEBUG = False
+_DEBUG = True
 __VERSION__ = '0.6.0'
 _ANONYMOUS_USER_AGENT = 'anonymous'
 _USER_AGENT = '{}'
@@ -164,7 +164,7 @@ def _get_credentials():
 
 def _get_user_agent():
     """Return User-Agent for request header"""
-    if get_options().anonymous:
+    if get_options().anon:
         return _ANONYMOUS_USER_AGENT
     return _generate_user_agent_with_info()
 
@@ -272,6 +272,7 @@ def get_options_parser():
 
     parser.add_argument('note', metavar='NOTE', type=str, nargs='*', default=sys.stdin.read() if select.select([sys.stdin,],[],[],0.0)[0] else None,
                         help='New Note')
+    parser.add_argument('-c', '--create', type=str, nargs='*', help='Create note')
 
     parser.add_argument('-u', '--user', help='username', type=str)
     parser.add_argument('-p', '--password', help='password', type=str)
@@ -319,8 +320,9 @@ def main():
             display(get_note(options.num_note))
         elif options.last:
             display(get_last_note())
-        elif options.note:
-            display(create_note(' '.join(options.note)))
+        elif options.note or options.create:
+            note = options.note or options.create
+            display(create_note(' '.join(note)))
         else:
             display(get_notes())
 
