@@ -278,6 +278,8 @@ def get_options_parser():
     parser.add_argument('-p', '--password', help='password', type=str)
     parser.add_argument('--host', default=_HOST, help='host (default: %s)' % _HOST, type=str)
 
+    parser.add_argument('-a', '--all', help='display all notes',
+                        action='store_true')
     parser.add_argument('-l', '--last', help='display only last note',
                         action='store_true')
     parser.add_argument('-n', '--num-note', help='display only note with given number', type=int)
@@ -316,14 +318,17 @@ def main():
             if token:
                 _save_token(token)
 
-        if options.num_note:
+        if options.note or options.create:
+            note = options.note or options.create
+            display(create_note(' '.join(note)))
+        
+        if options.all:
+            display(get_notes())
+        elif options.num_note:
             display(get_note(options.num_note))
         elif options.last:
             display(get_last_note())
-        elif options.note or options.create:
-            note = options.note or options.create
-            display(create_note(' '.join(note)))
-        else:
+        elif not (options.note or options.create):
             display(get_notes())
 
     except KeyboardInterrupt:
