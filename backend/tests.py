@@ -214,10 +214,11 @@ class ClientTestCase(LiveServerTestCase):
 
     def test_invalid_password(self):
         self._options.list = True
+        self._options.password = 'false'
         noteit.main()
         self.assertEqual(self.out.pop(), 'Error at authentication')
         self._options.password = TEST_USER['password']
-        
+
     def test_registration(self):
         self.assertFalse(User.objects.filter(username='new').exists())
         
