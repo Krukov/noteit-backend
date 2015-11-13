@@ -209,7 +209,7 @@ class ClientTestCase(LiveServerTestCase):
         noteit._DEBUG = True
 
     def test_anonymous_request(self):
-        self._options.anonymous = True
+        self._options.anon = True
         self.assertEqual(noteit._get_user_agent(), noteit._ANONYMOUS_USER_AGENT)
 
     def test_invalid_password(self):
