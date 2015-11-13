@@ -208,9 +208,8 @@ def _get_headers():
     headers = {
         _USER_AGENT_HEADER: _get_user_agent(),
     }
-    token = _get_token_from_system()
-    if token and not get_options().user:
-        headers[_TOKEN_HEADER] = b'token ' + token.encode('ascii')
+    if not get_options().user and not get_options().ignore and _get_token_from_system():
+        headers[_TOKEN_HEADER] = b'token ' + _get_token_from_system().encode('ascii')
     else:
         headers[_AUTH_HEADER] = _get_encoding_basic_credentials()
     return headers
@@ -277,6 +276,8 @@ def get_options_parser():
 
     parser.add_argument('--do-not-save', help='disable to save token locally',
                         action='store_true')
+    parser.add_argument('-i', '--ignore', help='if set, client will skip local token',
+                        action='store_true')
 
     parser.add_argument('-a', '--anonymous', help='do not add OS and other info to agent header',
                         action='store_true')
@@ -300,7 +301,7 @@ def main():
         if options.version:
             display(get_version())
             return
-        if not _get_token_from_system():
+        if not _get_token_from_system() or options.ignore:
             if not options.user:
                 display('You mast set "--user" option to use service')
                 get_options_parser().print_help()
