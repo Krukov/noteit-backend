@@ -277,8 +277,6 @@ def get_options_parser():
 
     parser.add_argument('-s', '--save', help='enable to save token locally',
                         action='store_true')
-    parser.add_argument('-c', '--color', help='enable colorized output',
-                        action='store_true')
 
     parser.add_argument('-a', '--anonymous', help='do not add OS and other info to agent header',
                         action='store_true')
