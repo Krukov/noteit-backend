@@ -265,7 +265,11 @@ def _make_request(url, method=GET, data=None, headers=None):
 
 def get_options_parser():
     """Arguments deffinition"""
-    parser = argparse.ArgumentParser(description='note some messages for share it throw machenes')
+    parser = argparse.ArgumentParser(description='noteit', prog='noteit')
+    
+    parser.add_argument('--version', action='version', version='%(prog)s ' + get_version(),
+                        help='displays the current version of %(prog)s and exit')
+
     parser.add_argument('note', metavar='NOTE', type=str, nargs='*', default=sys.stdin.read() if select.select([sys.stdin,],[],[],0.0)[0] else None,
                         help='New Note')
 
@@ -288,8 +292,6 @@ def get_options_parser():
                         action='store_true')
     parser.add_argument('--report', help='report error', action='store_true')
 
-    parser.add_argument('-v', '--version', help='displays the current version of noteit',
-                        action='store_true')
     return parser
 
 
@@ -303,9 +305,6 @@ def main():
     """Main"""
     options = get_options()
     try:
-        if options.version:
-            display(get_version())
-            return
         
         if options.drop_tokens:
             display(drop_tokens())
