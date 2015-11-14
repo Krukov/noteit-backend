@@ -31,7 +31,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('uuid', models.UUIDField(default=uuid.uuid4, unique=True, verbose_name='UUID')),
-                ('is_active', models.BooleanField(default=True)),
                 ('date_create', models.DateTimeField(auto_now_add=True)),
                 ('question', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='register_questions', to='auth_app.Question')),
             ],

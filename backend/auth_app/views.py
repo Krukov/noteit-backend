@@ -17,7 +17,6 @@ class QuestionView(BaseDetailView):
     model = RegisterQuestion
     slug_field = 'uuid'
     slug_url_kwarg = 'uuid'
-    queryset = RegisterQuestion.objects.filter(is_active=True)
 
     @cached_property
     def object(self):
@@ -50,14 +49,15 @@ class QuestionView(BaseDetailView):
         if 'answer' not in request.POST:
             return HttpResponse('Expect parameter "answer" in the request body. Question: "%s"' % self.object.question.text,
                                 status=400)
-        if self.object.question.answer == request.POST.get('answer'):
+        if self.object.question.answer == request.POST.get('answer') and self.object.is_valid:
             user = self.object.user
             user.is_register = True
-            self.object.is_active = False
             user.save()
-            self.object.save()
-            return HttpResponse('Ok', status=202)
-        return HttpResponse('Wrong answer. Question: "%s"' % self.object.question.text, status=400)
+            self.object.delete()
+            return HttpResponse('Yes!!!', status=202)
+        else:
+            self.object.delete()
+        return HttpResponse('Wrong answer.', status=400)
 
 
 @require_POST

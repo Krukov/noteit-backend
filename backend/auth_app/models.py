@@ -58,7 +58,7 @@ class User(AbstractBaseUser):
 
     @cached_property
     def question(self):
-        question = self.questions.filter(is_active=True).last()
+        question = self.questions.last()
         if not question or not question.is_valid:
             return self.create_question()
         return question
@@ -92,18 +92,24 @@ class Question(models.Model):
 
     is_active = models.BooleanField(default=True)
 
+    def __str__(self):
+        return '{}: {}'.format(self.text, self.answer)
+
 
 class RegisterQuestion(models.Model):
     uuid = models.UUIDField(max_length=63, default=uuid4, unique=True, verbose_name='UUID')
 
     question = models.ForeignKey(Question, related_name='register_questions')
     user = models.ForeignKey(User, related_name='questions')
-    is_active = models.BooleanField(default=True)
 
     date_create = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['date_create']
+
+    def __str__(self):
+        return '{} {}'.format(self.user.username, self.uuid)
+
 
     @models.permalink
     def url(self):
