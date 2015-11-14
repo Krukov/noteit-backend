@@ -11,18 +11,17 @@ import sys
 import traceback
 
 try:
-    from httplib import HTTPConnection  # Py<=3
+    from httplib import HTTPConnection, HTTPSConnection  # Py<=3
     from urllib import urlencode
     from socket import error as ConnectionError
 except ImportError:
-    from http.client import HTTPConnection  # Py>=3
+    from http.client import HTTPConnection, HTTPSConnection # Py>=3
     from urllib.parse import urlencode
 
 
-_DEBUG = True
-__VERSION__ = '0.6.0'
+_DEBUG = False
+__VERSION__ = '0.8.0'
 _ANONYMOUS_USER_AGENT = 'anonymous'
-_USER_AGENT = '{}'
 _HOST = '127.0.0.1:8000'
 _TOKEN_PATH = os.path.expanduser('~/.noteit/noteit.tkn')
 
@@ -258,7 +257,14 @@ def _response_handler(response):
 @cached_function
 def _get_connection():
     """Create and return conection with host"""
-    return HTTPConnection(get_options().host)
+    host = get_options().host
+    if host.startswith('https://'):
+        host = host[8:]
+        Connection = HTTPSConnection
+    else:
+        Connection = HTTPConnection
+        host = host.replace('http://', '')
+    return Connection(host)
 
 
 def _make_request(url, method=GET, data=None, headers=None):
@@ -348,7 +354,7 @@ def main():
     except KeyboardInterrupt:
         display('\n')
     except AuthenticationError:
-        display('Error at authentication')
+        display('Error at authentication. Meybe given username is busy')
     except ServerError:
         display('Sorry we have got server error. Please, try again later')
     except ConnectionError:
