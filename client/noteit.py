@@ -13,6 +13,7 @@ import traceback
 try:
     from httplib import HTTPConnection  # Py<=3
     from urllib import urlencode
+    from socket import error as ConnectionError
 except ImportError:
     from http.client import HTTPConnection  # Py>=3
     from urllib.parse import urlencode
