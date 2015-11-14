@@ -14,6 +14,7 @@ try:
     from httplib import HTTPConnection, HTTPSConnection  # Py<=3
     from urllib import urlencode
     from socket import error as ConnectionError
+    input = raw_input
 except ImportError:
     from http.client import HTTPConnection, HTTPSConnection # Py>=3
     from urllib.parse import urlencode
@@ -60,7 +61,7 @@ def cached_function(func):
 
 
 def display(out, stdout=sys.stdout):
-    stdout.write(out + '\n')
+    stdout.write('>' + '\n>'.join(out.splitlines()) + '\n')
 
 
 @cached_function
@@ -340,7 +341,7 @@ def main():
 
         if options.note or options.create:
             note = options.note or options.create
-            display(create_note(' '.join(note)))
+            display(create_note(' '.join(note) if isinstance(note, (list, tuple)) else note))
         
         if options.all:
             display(get_notes())
