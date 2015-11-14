@@ -59,14 +59,14 @@ Use
 ::
 
 	$ /# noteit 
-	> >Input username: krukov
-	> >Input your password: 
-	> >If you are not registered yet, answer the question 'Do you like this tool?': yes
-	> >You haven't notes
+	>Input username: krukov
+	>Input your password: 
+	>If you are not registered yet, answer the question 'Do you like this tool?': yes
+	>You haven't notes
 	$ /# noteit My first note
-	> >Note saved
+	>Note saved
 	$ /# echo "Noteit can get note from pipe" | noteit 
 	>  >Note saved
 	$ /# noteit 
-	> >1: Noteit can get note from pipe
-	> >2: My first note
+	>1: Noteit can get note from pipe
+	>2: My first note
