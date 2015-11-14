@@ -56,6 +56,9 @@ class User(AbstractBaseUser):
         verbose_name = _('app user')
         verbose_name_plural = _('app users')
 
+    def __str__(self):
+        return '{} {}'.format(self.username, ['not registered', 'registered'][self.is_register])
+
     @cached_property
     def question(self):
         question = self.questions.last()

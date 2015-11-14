@@ -26,3 +26,10 @@ class Report(models.Model):
     user = models.ForeignKey(settings.APP_USER_MODEL, blank=True, null=True)
 
     date_create = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date_create']
+
+    def __str__(self):
+        return '{} {}'.format(self.date_create, self.info)
+
