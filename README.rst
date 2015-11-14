@@ -1,5 +1,5 @@
 ======================================
-noteit
+noteit  - coming soon! - it is just prototype
 ======================================
 
 .. image:: https://travis-ci.org/Krukov/noteit.svg?branch=master
@@ -13,17 +13,19 @@ Tool for simple store some notes
 
 That The tool I created for my own purposes, but I will glad if you will use it too.
 
-I love commandline tools like 'howdoi <https://github.com/gleitz/howdoi>'_ or 'fuckit <>'_, they are really awesome.
+I love commandline tools like `howdoi <https://github.com/gleitz/howdoi>`_ or `fuckit <https://github.com/ajalt/fuckitpy>`_, they are really awesome.
 Sometimes we want to note something simple, some usefull: command like *tar zxvf* (Really, I hate this command) or password from some service, and that it will be great, if you can make this note simple and fast, and than get this note anywhere. So, take this tool and enjoy!
 
 
 How to
 =================
 
-INSTALL
+Install
 -----------------
 
+
 Thare are 3 ways to use this tool:
+
 * simple/pythonic way:
 
 ::
@@ -34,8 +36,8 @@ Thare are 3 ways to use this tool:
 
 ::
 
-	wget https://raw.githubusercontent.com/Krukov/noteit/master/client/noteit.py -O /usr/bin/noteit --no-check-certificate
-	chmod +x /usr/bin/noteit
+	$ wget https://raw.githubusercontent.com/Krukov/noteit/master/client/noteit.py -O /usr/bin/noteit --no-check-certificate
+	$ chmod +x /usr/bin/noteit
 
 
 
@@ -43,30 +45,28 @@ Thare are 3 ways to use this tool:
 
 ::
 
-	python -c "$(curl -s https://raw.githubusercontent.com/Krukov/noteit/master/client/noteit.py)" [ARGUMENTS]
+	$ python -c "$(curl -s https://raw.githubusercontent.com/Krukov/noteit/master/client/noteit.py)" [ARGUMENTS]
 
 
 or 
 
- go to -hell- read [CURL_MAN.md]()
+go read CURL_MAN.md
 
 
-USE
+Use
 ------------
 
 ::
 
-	/# noteit 
-	Input username: krukov
-	Input your password: 
-	If you are not registered yet, answer the question 'Do you like this tool?': yes
-	You haven't notes
-	/# noteit My first note
-	Note saved
-	/# echo "Noteit can get note from pipe" | no
-	nohup    nologin  noteit   
-	/# echo "Noteit can get note from pipe" | noteit 
-	Note saved
-	/# noteit 
-	1: Noteit can get note from pipe
-	2: My first note
+	$ /# noteit 
+	> >Input username: krukov
+	> >Input your password: 
+	> >If you are not registered yet, answer the question 'Do you like this tool?': yes
+	> >You haven't notes
+	$ /# noteit My first note
+	> >Note saved
+	$ /# echo "Noteit can get note from pipe" | noteit 
+	>  >Note saved
+	$ /# noteit 
+	> >1: Noteit can get note from pipe
+	> >2: My first note
