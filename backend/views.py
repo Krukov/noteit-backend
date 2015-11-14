@@ -79,8 +79,9 @@ def report_view(request):
     form = ReportForm(request.POST)
     if form.is_valid():
         report = form.instance
-        report.user = request.user
-        report.info = request.META['HTTP_USER_AGENT']
+        if hasattr(request, 'user') and request.user:
+            report.user = request.user
+        report.info = request.META.get('HTTP_USER_AGENT', '')
         report.save()
         return HttpResponse(status=201)
     return HttpResponse('Invalid', status=400)

@@ -103,9 +103,22 @@ def create_note(note):
 
 
 def report(tb):
-    """Make traceback and etc. to server"""
-    _, status = do_request(_URLS_MAP['report'], method=POST, data={'traceback': tb})
-    if status == 201:
+    """Make traceback and etc. to server""" 
+    data = {'traceback': tb}
+    try:
+        _, status = do_request(_URLS_MAP['report'], method=POST, data=data)
+    except Exception:
+        data = urlencode(data).encode('ascii')
+        conn = _get_connection()
+        try:
+            headers = _get_headers()
+        except Exception:
+            headers = {}
+        headers.update({"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"})
+        conn.request(POST, _URLS_MAP['report'], body=data, headers=headers)
+        status = conn.getresponse().status
+
+    if status in range(200, 204):
         return 'Thanks you for reporting...'
     return 'Error: can not report error'
 
@@ -293,7 +306,7 @@ def get_options_parser():
 
     parser.add_argument('--anon', help='do not add OS and other info to agent header',
                         action='store_true')
-    parser.add_argument('--report', help='report error', action='store_true')
+    parser.add_argument('-r', '--report', help='report error', action='store_true')
 
     return parser
 
@@ -337,13 +350,15 @@ def main():
         display('Error at authentication')
     except ServerError:
         display('Sorry we have got server error. Please, try again later')
+    except ConnectionError:
+        display('Something wrong with conection, check your internet or try again later')
     except Exception:
         if _DEBUG:
             raise
         if not options.report:
-            print('Something went wrong! You can sent report to us with "--report" option')
+            print('Something went wrong! You can sent report to us with "-r" option')
             return
-        display(report(traceback.format_exc()))
+        print(report(traceback.format_exc()))
 
 
 if __name__ == '__main__':

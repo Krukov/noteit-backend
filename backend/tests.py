@@ -195,17 +195,17 @@ class ClientTestCase(LiveServerTestCase):
     def test_send_report(self):
         self.assertEqual(Report.objects.all().count(), 0)
         msg = 'test'
-        old = noteit.get_notes
+        old = noteit._get_headers
         def _():
             raise Exception(msg)
-        noteit.get_notes = _
+        noteit._get_headers = _
         self._options.report = True
         noteit._DEBUG = False
         noteit.main()
         self.assertEqual(Report.objects.all().count(), 1)
         self.assertTrue(Report.objects.first().traceback)
-        self.assertEqual(Report.objects.first().user, self.user)
-        noteit.get_notes = old
+        self.assertEqual(Report.objects.first().info, '')
+        noteit._get_headers = old
         noteit._DEBUG = True
 
     def test_anonymous_request(self):
