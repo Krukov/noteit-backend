@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from __future__ import print_function
+# -*- encoding: utf-8 -*-
 
 import argparse
 import base64
@@ -42,15 +42,18 @@ _URLS_MAP = {
 
 class AuthenticationError(Exception):
     """Error raising at wrong password """
+    pass
 
 
 class ServerError(Exception):
     """Error if server is retunr 50x status"""
+    pass
 
 
 def cached_function(func):
     """Decorator that chache function result at first call and return cached result other calls """
     _CACHED_ATTR = '_cache'
+
     def _func(*args, **kwargs):
         if hasattr(func, _CACHED_ATTR) and getattr(func, _CACHED_ATTR) is not None and not _DEBUG:
             return getattr(func, _CACHED_ATTR)
@@ -261,11 +264,11 @@ def _get_connection():
     host = get_options().host
     if host.startswith('https://'):
         host = host[8:]
-        Connection = HTTPSConnection
+        connection = HTTPSConnection
     else:
-        Connection = HTTPConnection
+        connection = HTTPConnection
         host = host.replace('http://', '')
-    return Connection(host)
+    return connection(host)
 
 
 def _make_request(url, method=GET, data=None, headers=None):
@@ -284,6 +287,15 @@ def _make_request(url, method=GET, data=None, headers=None):
     return conn.getresponse()
 
 
+def _get_from_pipe():
+    try:
+        is_in_pipe = select.select([sys.stdin], [], [], 0.0)[0]
+    except select.error:
+        return
+    else:
+        return sys.stdin.read() if is_in_pipe else None
+
+
 def get_options_parser():
     """Arguments deffinition"""
     parser = argparse.ArgumentParser(description='noteit', prog='noteit')
@@ -291,7 +303,7 @@ def get_options_parser():
     parser.add_argument('--version', action='version', version='%(prog)s ' + get_version(),
                         help='displays the current version of %(prog)s and exit')
 
-    parser.add_argument('note', metavar='NOTE', type=str, nargs='*', default=sys.stdin.read() if select.select([sys.stdin,],[],[],0.0)[0] else None,
+    parser.add_argument('note', metavar='NOTE', type=str, nargs='*', default=_get_from_pipe(),
                         help='New Note')
     parser.add_argument('-c', '--create', type=str, nargs='*', help='Create note')
 
@@ -355,11 +367,11 @@ def main():
     except KeyboardInterrupt:
         display('\n')
     except AuthenticationError:
-        display('Error at authentication. Meybe given username is busy')
+        display('Error at authentication. Maybe given username is busy')
     except ServerError:
         display('Sorry we have got server error. Please, try again later')
     except ConnectionError:
-        display('Something wrong with conection, check your internet or try again later')
+        display('Something wrong with connection, check your internet or try again later')
     except Exception:
         if _DEBUG:
             raise
