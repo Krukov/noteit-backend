@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 from setuptools import setup
 
-from client.noteit import get_version
+from noteit import get_version
 
 
 setup(
     name='noteit',
     version=get_version(),
-    packages=['client'],
+    packages=['noteit'],
     
     entry_points={
         'console_scripts': [
-            'noteit = client.noteit:main',
-        ]
+            'noteit = noteit.__init__:main',
+        ],
     },
     url='https://github.com/Krukov/noteit',
     download_url='https://github.com/Krukov/noteit/tarball/' + get_version(),

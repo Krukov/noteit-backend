@@ -26,7 +26,7 @@ Install
 
 Thare are 3 ways to use this tool:
 
-* simple/pythonic way:
+* simple/try/pythonic way:
 
 ::
 
@@ -36,7 +36,7 @@ Thare are 3 ways to use this tool:
 
 ::
 
-	$ wget https://raw.githubusercontent.com/Krukov/noteit/master/client/noteit.py -O /usr/bin/noteit --no-check-certificate
+	$ wget https://raw.githubusercontent.com/Krukov/noteit/master/noteit/noteit -O /usr/bin/noteit --no-check-certificate
 	$ chmod +x /usr/bin/noteit
 
 
@@ -45,7 +45,7 @@ Thare are 3 ways to use this tool:
 
 ::
 
-	$ python -c "$(curl -s https://raw.githubusercontent.com/Krukov/noteit/master/client/noteit.py)" [ARGUMENTS]
+	$ python -c "$(curl -s https://raw.githubusercontent.com/Krukov/noteit/master/noteit/noteit)" [ARGUMENTS]
 
 
 or 
