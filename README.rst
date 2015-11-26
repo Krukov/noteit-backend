@@ -1,5 +1,5 @@
 ======================================
-noteit  - coming soon! - it is just prototype
+noteit  - coming soon!
 ======================================
 
 .. image:: https://travis-ci.org/Krukov/noteit.svg?branch=master
@@ -66,7 +66,15 @@ Use
 	$ /# noteit My first note
 	>Note saved
 	$ /# echo "Noteit can get note from pipe" | noteit 
-	>  >Note saved
+	>Note saved
 	$ /# noteit 
 	>1: Noteit can get note from pipe
 	>2: My first note
+
+
+
+*FUTURES*
+==========
+ - drop note
+ - save files
+ - browse notes as html
