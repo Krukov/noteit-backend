@@ -24,7 +24,7 @@ setup(
     keywords='noteit note console command line messages', 
     classifiers=[
         'Development Status :: 4 - Beta',
-        "Environment :: Console",
+        'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
@@ -32,5 +32,6 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
     ],
 )
