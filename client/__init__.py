@@ -26,6 +26,7 @@ __VERSION__ = '0.8.0'
 _ANONYMOUS_USER_AGENT = 'anonymous'
 _HOST = '127.0.0.1:8000'
 _TOKEN_PATH = os.path.expanduser('~/.noteit/noteit.tkn')
+_TOKEN_ENV_VALUE = 'NOTEIT_TOKEN'
 
 _USER_AGENT_HEADER = 'User-Agent'
 _AUTH_HEADER = 'Authorization'
@@ -200,6 +201,8 @@ def _generate_user_agent_with_info():
 @cached_function
 def _get_token_from_system():
     """Return tocken from file"""
+    if _TOKEN_ENV_VALUE in os.environ:
+        return os.environ.get(_TOKEN_ENV_VALUE)
     if os.path.isfile(_TOKEN_PATH):
         with open(_TOKEN_PATH) as _file:
             return _file.read().strip()
