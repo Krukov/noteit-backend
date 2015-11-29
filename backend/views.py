@@ -5,7 +5,7 @@ import bleach
 from user_agents import parse
 
 from django.conf import settings
-from django.views.generic import View, CreateView
+from django.views.generic import View
 from django.http import HttpResponse, Http404
 from django.forms import Form, CharField, ModelForm
 from django.views.decorators.http import require_POST
