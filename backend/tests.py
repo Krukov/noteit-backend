@@ -12,7 +12,7 @@ from django.test import TestCase, LiveServerTestCase
 
 from backend.models import Note, Report
 from backend.auth_app.models import User, RegisterQuestion, Question, Token
-import client as noteit
+import noteit
 
 HTTP_HEADER_ENCODING = 'iso-8859-1'
 

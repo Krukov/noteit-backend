@@ -1,3 +1,5 @@
 -r base.txt
+-e git+git@github.com:krukov/noteit.git@HEAD#egg=noteit
 coverage
 coveralls
+
