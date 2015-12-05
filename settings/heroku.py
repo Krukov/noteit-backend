@@ -3,8 +3,8 @@ import os
 import dj_database_url
 from .settings import *
 
-
-DEBUG = True
+ALLOWED_HOSTS = ['*']
+DEBUG = False
 SECRET_KEY = os.environ.get('SECRET_KEY', None)
 WSGI_APPLICATION = 'backend.wsgi.application'
 
