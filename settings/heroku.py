@@ -16,7 +16,7 @@ SSL = SECURE_SSL_REDIRECT = False
 SECURE_FRAME_DENY = False
 
 QUESTION_LIFE_TIME = {'seconds': 20}
-MAX_NOTES = os.environ.get('NOTES_LIMIT', 10)
+MAX_NOTES = 20
 
 LOGGING = {
     'version': 1,
