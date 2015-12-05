@@ -1,42 +1,10 @@
 # Parse database configuration from $DATABASE_URL
-from .settings import *
-import dj_database_url
-
-
-INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.admin',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-
-) + INSTALLED_APPS
-
-MIDDLEWARE_CLASSES = (
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-) + MIDDLEWARE_CLASSES
-
-
-STATIC_ROOT = 'staticfiles'
-STATIC_URL = '/static/'
-MEDIA_ROOT = 'media'
-MEDIA_URL = '/media/'
-ROOT_URLCONF = 'backend.urls_local'
-
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
-)
-
-# Enable Persistent Connections
 import os
+import dj_database_url
+from .settings import *
 
-DEBUG = False
+
+DEBUG = True
 SECRET_KEY = os.environ.get('SECRET_KEY', None)
 WSGI_APPLICATION = 'backend.wsgi.application'
 
@@ -49,3 +17,37 @@ SECURE_FRAME_DENY = False
 
 QUESTION_LIFE_TIME = {'seconds': 20}
 MAX_NOTES = os.environ.get('NOTES_LIMIT', 10)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': ('%(asctime)s [%(process)d] [%(levelname)s] ' +
+                       'pathname=%(pathname)s lineno=%(lineno)s ' +
+                       'funcname=%(funcName)s %(message)s'),
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        }
+    },
+    'handlers': {
+        'null': {
+            'level': 'DEBUG',
+            'class': 'logging.NullHandler',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+    }
+}
