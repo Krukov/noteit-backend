@@ -9,6 +9,7 @@ from django.views.generic import View
 from django.http import HttpResponse, Http404
 from django.forms import Form, CharField, ModelForm
 from django.views.decorators.http import require_POST
+from django.db.utils import IntegrityError
 
 from .models import Note, Report
 
@@ -74,7 +75,10 @@ class NoteView(View):
         form = NoteForm(request.POST)
         if form.is_valid() and not kwargs.get('index', None):
             data = form.cleaned_data
-            Note.objects.create(text=data['note'], alias=data.get('alias'), owner=request.user)
+            try:
+                Note.objects.create(text=data['note'], alias=data.get('alias'), owner=request.user)
+            except IntegrityError:
+                return HttpResponse('Note with given alias is already exists', status=400)
             return HttpResponse('Ok', status=201)
         return HttpResponse('Expected "note" in request body', status=400)
 
