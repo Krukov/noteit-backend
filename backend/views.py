@@ -9,6 +9,7 @@ from django.views.generic import View
 from django.http import HttpResponse, Http404
 from django.forms import Form, CharField, ModelForm
 from django.views.decorators.http import require_POST
+from django.db.utils import IntegrityError
 
 from .models import Note, Report
 
@@ -27,6 +28,7 @@ ALLOWED_ATTRS.update({
 
 class NoteForm(Form):
     note = CharField(max_length=2**14-1)
+    alias = CharField(max_length=2**6-1, required=False)
 
 
 class ReportForm(ModelForm):
@@ -40,7 +42,7 @@ class NoteView(View):
 
     def get(self, request, **kwargs):
         limit = self.get_limit()
-        notes = request.user.notes.filter(is_active=True)[:limit]
+        notes = request.user.notes.filter(is_active=True)
         if not notes:
             return HttpResponse('Hello, you have not any notes. It can be created with POST request with "note" parameter at this path', status=204)
 
@@ -53,9 +55,16 @@ class NoteView(View):
                 raise Http404
             response = notes[int(request.GET.get('n')) - 1].text
         elif 'l' in request.GET or 'last' in request.GET:
-            response = notes[0].text
+            response = notes.first().text
+        elif 'a' in request.GET or 'alias' in request.GET:
+            alias = request.GET.get('a', None) or request.GET.get('alias')
+            note = notes.filter(alias=alias).first()
+            if note:
+                response = note.text
+            else:
+                raise Http404
         else:
-            response = '\n'.join([TEMPLATE.format(i=i+1, text=note.text) for i, note in enumerate(notes)])
+            response = '\n'.join([TEMPLATE.format(i=i+1, text=note.text) for i, note in enumerate(notes[:limit])])
         ua = parse(request.META.get('HTTP_USER_AGENT', ''))
         if ua.device.family != OTHER or ua.browser.family != OTHER:
             response = bleach.clean(response, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, styles=ALLOWED_STYLES)
@@ -65,7 +74,11 @@ class NoteView(View):
     def post(request, **kwargs):
         form = NoteForm(request.POST)
         if form.is_valid() and not kwargs.get('index', None):
-            Note.objects.create(text=form.cleaned_data['note'], owner=request.user)
+            data = form.cleaned_data
+            try:
+                Note.objects.create(text=data['note'], alias=data.get('alias'), owner=request.user)
+            except IntegrityError:
+                return HttpResponse('Note with given alias is already exists', status=400)
             return HttpResponse('Ok', status=201)
         return HttpResponse('Expected "note" in request body', status=400)
 

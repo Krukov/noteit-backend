@@ -10,6 +10,7 @@ from django.db import models
 class Note(models.Model):
     text = models.TextField(max_length=2**14-1, verbose_name='Note')
     owner = models.ForeignKey(settings.APP_USER_MODEL, related_name='notes')
+    alias = models.CharField(max_length=2**6-1, blank=True, null=True)
 
     is_active = models.BooleanField(default=True)
 
@@ -17,7 +18,9 @@ class Note(models.Model):
     last_update = models.DateTimeField(auto_now=True)
 
     class Meta:
+        unique_together = ('owner', 'alias')
         ordering = ['-date_create']
+
 
 
 class Report(models.Model):
