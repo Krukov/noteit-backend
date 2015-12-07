@@ -77,6 +77,20 @@ class FunctionTestCase(TestCase):
         self.assertEqual(req.status_code, 200, req)
         self.assertEqual(req.content.decode('ascii'), '1: My first note', req)
 
+    def test_save_and_get_note_with_alias(self):
+        User.objects.create_user(is_register=True, **TEST_USER)
+
+        req = self.client.post('/', data={'note': 'aliased note', 'alias': 'test'}, **get_auth_header(**TEST_USER))
+        self.assertEqual(req.status_code, 201, req)
+        req = self.client.post('/', data={'note': 'aliased note2', 'alias': 'test2'}, **get_auth_header(**TEST_USER))
+        self.assertEqual(req.status_code, 201, req)
+        
+        req = self.client.get('/', data={'alias': 'test'}, **get_auth_header(**TEST_USER))
+        self.assertEqual(req.content.decode('ascii'), 'aliased note', req)
+
+        req = self.client.get('/', data={'alias': 'test2'}, **get_auth_header(**TEST_USER))
+        self.assertEqual(req.content.decode('ascii'), 'aliased note2', req)
+
     def test_get_last_and_number_note(self):
         u = User.objects.create_user(is_register=True, **TEST_USER)
         for i in range(10):
