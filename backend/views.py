@@ -14,8 +14,6 @@ from .utils import clean_tags, get_random_alias
 from .models import Note, Report
 
 
-JSON_CONTENT_TYPE = 'application/json'
-JSON_CTS = [JSON_CONTENT_TYPE, ]
 OTHER = 'Other'
 TEMPLATE = '{i}: {text}'
 
