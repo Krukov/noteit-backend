@@ -147,7 +147,7 @@ class ClientTestCase(LiveServerTestCase):
         noteit._TOKEN_PATH = os.path.join(tempfile.mktemp(), 'test.tkn')
 
     def test_get_notes(self):
-        expected = '1: 3\n2: 2\n3: 1\n4: 0'
+        expected = u'1: 3\n2: 2\n3: 1\n4: 0'
         noteit.main()
         self.assertEqual(self.out.pop(), expected)
 
@@ -160,7 +160,7 @@ class ClientTestCase(LiveServerTestCase):
 
 
     def test_invalid_note_number(self):
-        expected = "No note with given number"
+        expected = "No note with requested number"
 
         self._options.num_note = 5
         noteit.main()
@@ -183,16 +183,16 @@ class ClientTestCase(LiveServerTestCase):
     def test_create_note(self):
         self._options.note = ['Hello']
         noteit.main()
-        expected = 'Note saved'
+        expected = 'Saved'
         self.assertEqual(self.out.pop(), expected)
         self.assertTrue(Note.objects.filter(owner=self.user, text='Hello').exists())
 
     def test_drop_token(self):
-        expected = 'Tokens are dropped'
+        expected = 'Tokens are deleted'
         old_key = self.user.token.key
         self._options.drop_tokens = True
         noteit.main()
-        self.assertEqual(self.out.pop(), '1: 3\n2: 2\n3: 1\n4: 0')
+        self.assertEqual(self.out.pop(), u'1: 3\n2: 2\n3: 1\n4: 0')
         self.assertEqual(self.out.pop(), expected)
         self.assertNotEqual(Token.objects.get(user=self.user).key, old_key)
 
@@ -226,13 +226,6 @@ class ClientTestCase(LiveServerTestCase):
         self._options.anon = True
         self.assertEqual(noteit._get_user_agent(), noteit._ANONYMOUS_USER_AGENT)
 
-    def test_invalid_password(self):
-        self._options.list = True
-        self._options.password = 'false'
-        noteit.main()
-        self.assertIn('Error at authentication', self.out.pop())
-        self._options.password = TEST_USER['password']
-
     def test_registration(self):
         self.assertFalse(User.objects.filter(username='new').exists())
         
@@ -245,7 +238,7 @@ class ClientTestCase(LiveServerTestCase):
         noteit.main()
 
         self.assertTrue(User.objects.filter(username='new', is_register=True).exists())
-        self.assertEqual(self.out.pop(), "You haven't notes")
+        self.assertEqual(self.out.pop(), "You have not notes")
         noteit._get_from_stdin = old
         self._options.user = TEST_USER['username']
         self._options.password = TEST_USER['password']
