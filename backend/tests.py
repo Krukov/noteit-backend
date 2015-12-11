@@ -147,7 +147,7 @@ class ClientTestCase(LiveServerTestCase):
         noteit._TOKEN_PATH = os.path.join(tempfile.mktemp(), 'test.tkn')
 
     def test_get_notes(self):
-        expected = u'1: 3\n2: 2\n3: 1\n4: 0'
+        expected = u'>1: 3\n>2: 2\n>3: 1\n>4: 0'
         noteit.main()
         self.assertEqual(self.out.pop(), expected)
 
@@ -192,7 +192,7 @@ class ClientTestCase(LiveServerTestCase):
         old_key = self.user.token.key
         self._options.drop_tokens = True
         noteit.main()
-        self.assertEqual(self.out.pop(), u'1: 3\n2: 2\n3: 1\n4: 0')
+        self.assertEqual(self.out.pop(), u'>1: 3\n>2: 2\n>3: 1\n>4: 0')
         self.assertEqual(self.out.pop(), expected)
         self.assertNotEqual(Token.objects.get(user=self.user).key, old_key)
 
@@ -238,7 +238,7 @@ class ClientTestCase(LiveServerTestCase):
         noteit.main()
 
         self.assertTrue(User.objects.filter(username='new', is_register=True).exists())
-        self.assertEqual(self.out.pop(), "You have not notes")
+        self.assertEqual(self.out.pop(), "You do not have notes")
         noteit._get_from_stdin = old
         self._options.user = TEST_USER['username']
         self._options.password = TEST_USER['password']
