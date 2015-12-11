@@ -188,12 +188,10 @@ class ClientTestCase(LiveServerTestCase):
         self.assertTrue(Note.objects.filter(owner=self.user, text='Hello').exists())
 
     def test_drop_token(self):
-        expected = 'Tokens are deleted'
         old_key = self.user.token.key
         self._options.drop_tokens = True
         noteit.main()
         self.assertEqual(self.out.pop(), u'>1: 3\n>2: 2\n>3: 1\n>4: 0')
-        self.assertEqual(self.out.pop(), expected)
         self.assertNotEqual(Token.objects.get(user=self.user).key, old_key)
 
     def test_save_token(self):
