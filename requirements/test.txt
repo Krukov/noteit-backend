@@ -1,5 +1,0 @@
--r base.txt
--e git+https://github.com/Krukov/noteit.git@stable#egg=noteit
-coverage
-coveralls
-
