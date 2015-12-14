@@ -17,14 +17,17 @@ ALLOWED_ATTRS.update({
     '*': ['style'],
 })
 fake = Faker()
-
+BLOCKED_ALIAS = ['last', 'report']
 
 def gen_key():
     return binascii.hexlify(os.urandom(20)).decode()
 
 
 def get_alias():
-    return fake.word()
+    alias = fake.word()
+    if alias in BLOCKED_ALIAS:
+    	return get_alias()
+    return alias
 
 
 def clean_tags(text):
