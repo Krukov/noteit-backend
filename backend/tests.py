@@ -6,6 +6,7 @@ import base64
 import time
 import tempfile
 from collections import namedtuple
+from unittest import skip
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase, LiveServerTestCase
@@ -33,6 +34,7 @@ class FunctionTestCase(TestCase):
         for i in range(10):
             Question.objects.create(text='What you see: {}'.format(i + 1), answer=str(i + 1))
 
+    @skip(True)
     def test_registration(self):
         first = self.client.get('/', **get_auth_header(**TEST_USER))
         self.assertEqual(first.status_code, 303)
@@ -44,10 +46,6 @@ class FunctionTestCase(TestCase):
 
         question = self.client.get(first['location'], **get_auth_header(**TEST_USER)).content.decode('ascii')
         self.assertEqual(q.question.text, question)
-
-        # wrong_answer = self.client.post(first['location'],
-        #                                 data={'answer': q.question.id + 1}, **get_auth_header(**TEST_USER))
-        # self.assertEqual(wrong_answer.status_code, 400)
 
         right_answer = self.client.post(first['location'],
                                         data={'answer': str(q.question.id)}, **get_auth_header(**TEST_USER))
@@ -190,8 +188,7 @@ class ClientTestCase(LiveServerTestCase):
     def test_drop_token(self):
         old_key = self.user.token.key
         self._options.drop_tokens = True
-        noteit.main()
-        self.assertEqual(self.out.pop(), u'>1: 3\n>2: 2\n>3: 1\n>4: 0')
+        noteit.drop_tokens()
         self.assertNotEqual(Token.objects.get(user=self.user).key, old_key)
 
     def test_save_token(self):
