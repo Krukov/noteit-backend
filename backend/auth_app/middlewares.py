@@ -62,12 +62,9 @@ class BasicAuthMiddleware:
         }
         user = User.objects.filter(**{User.USERNAME_FIELD: user}).first()
         if user is None:
-            user = User.objects.create_user(**credentials)
-            response = redirect(user.question.url())
-            response.status_code = 303
-            return response
+            user = User.objects.create_user(is_register=True, **credentials)
+            request.user = user
         else:
-
             if not user.check_password(password):
                 return self.not_auth(_('Invalid username/password.'))
 
