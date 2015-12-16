@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import muffin
+from .middlewares import baseauth_middleware_factory, token_middleware_factory
+
+app = application = muffin.Application('noteit', CONFIG='config.local')
+app._middlewares.extend([baseauth_middleware_factory, token_middleware_factory])
 
 
-app = application = muffin.Application('noteit', CONFIG='settings.local')
-muffin.import_submodules(__name__)

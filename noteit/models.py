@@ -1,26 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import datetime as dt
+
 import peewee as pw
 from muffin.utils import generate_password_hash, check_password_hash
 
 from .app import app
 from .utils import gen_key, get_alias
-
-
-
-@app.ps.peewee.register
-class Note(pw.Model):
-	""" Implement Note models"""
-    text = pw.TextField()
-    owner = pw.ForeignKeyField(User, related_name='notes')
-    alias = pw.CharField(index=True, default=get_alias)
-    is_active = pw.BooleanField(default=True)
-    created = pw.DateTimeField(default=dt.datetime.now)
-
-    class Meta:
-        unique_together = ('owner', 'alias')
-        order_by = ['-date_create']
 
 
 @app.ps.peewee.register
@@ -29,6 +16,7 @@ class User(pw.Model):
     username = pw.CharField(unique=True)
     password = pw.CharField()
     created = pw.DateTimeField(default=dt.datetime.now)
+    active = pw.BooleanField(default=True)
 
     def __unicode__(self):
         return self.username
@@ -49,7 +37,7 @@ class Token(pw.Model):
     """ Store tokens. """
     key = pw.PrimaryKeyField(default=gen_key, index=True)
     user = pw.ForeignKeyField(User, related_name='tokens')
-	created = pw.DateTimeField(default=dt.datetime.now)
+    created = pw.DateTimeField(default=dt.datetime.now)
 
     def __unicode__(self):
         return self.key
@@ -59,8 +47,22 @@ class Token(pw.Model):
 class Report(pw.Model):
     traceback = pw.TextField()
     info = pw.TextField()
-    user = models.ForeignKeyField(User, null=True, related_name='reports')
+    user = pw.ForeignKeyField(User, null=True, related_name='reports')
     created = pw.DateTimeField(default=dt.datetime.now)
 
     def __unicode__(self):
         return '{} {}'.format(self.created, self.user)
+
+
+@app.ps.peewee.register
+class Note(pw.Model):
+    """ Implement Note models"""
+    text = pw.TextField()
+    owner = pw.ForeignKeyField(User, related_name='notes')
+    alias = pw.CharField(index=True, default=get_alias)
+    active = pw.BooleanField(default=True)
+    created = pw.DateTimeField(default=dt.datetime.now)
+
+    # class Meta:
+    #     unique_together = ('owner', 'alias')
+    #     order_by = ['-created']

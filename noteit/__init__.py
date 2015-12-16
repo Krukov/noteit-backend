@@ -1,5 +1,7 @@
-import muffin
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-app = application = muffin.Application('noteit', CONFIG='settings.local')
+import muffin
+from .app import app
 
 muffin.import_submodules(__name__)

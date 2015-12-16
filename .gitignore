@@ -16,3 +16,4 @@ dist
 *.egg-info/
 build/
 setup.cfg
+local.sqlite

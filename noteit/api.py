@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from muffin import Handler, Response
 from user_agents import parse
 
-from .models import Note, Report, User, Token
+from .models import Note, Report
 from .app import app
 
 
@@ -13,81 +14,49 @@ TEMPLATE = '{i}: {text}'
 
 
 def get_limit():
-	return getattr(app.config, 'MAX_NOTES', 10)
-
-class NoteForm(Form):
-    note = CharField(max_length=2**14-1)
-    alias = CharField(max_length=2**6-1, required=False)
-
-
-class ReportForm(ModelForm):
-    class Meta:
-        model = Report
-        fields = ['traceback']
+    # return getattr(app.config, 'MAX_NOTES', 10)
+    return 10
 
 
 @app.register('/')
-def notes(request):
-	notes = request.user.notes.filter(is_active=True)
+class NotesHandler(Handler):
+
+    def get(self, request):
+        limit = get_limit()
+        notes = request.user.notes.filter(active=True).limit(limit)
+        return [{'alias': note.alias, 'text': note.text} for note in notes]
+
+    def post(self, request):
+        data = yield from request.post()
+        note = Note.create(text=data.get('text'), alias=data.get('alias', None))
+        return Response({'status': 'ok'}, status=204)
+
 
 @app.register('/{alias}')
-def note(request):
-	alias = request.match_info.get('alias', 'anonymous')
+class NoteHandler(Handler):
 
-class NoteView(View):
+    @property
+    def note(self):
+        alias = self.request.match_info.get('alias')
+        return request.user.notes.filter(alias=alias, active=True).get()
+        
+    def get(self, request):
+        note = self.note
+        return {'alias': note.alias, 'text': note.text}
 
-    def get(self, request, **kwargs):
-        limit = self.get_limit()
-        notes = request.user.notes.filter(is_active=True)
-
-        if kwargs.get('index', None) is not None:
-            response = self.get_note(notes, int(kwargs['index']) - 1)
-        elif 'n' in request.GET and request.GET.get('n').isdigit():
-            response = self.get_note(notes, int(request.GET['n']) - 1)
-        elif 'l' in request.GET or 'last' in request.GET:
-            response = notes.first().text
-        elif 'a' in request.GET or 'alias' in request.GET:
-            alias = request.GET.get('a', None) or request.GET.get('alias')
-            note = notes.filter(alias=alias).first()
-            if note:
-                response = note.text
-            else:
-                raise Http404
-        else:
-            response = '\n'.join([TEMPLATE.format(i=i+1, text=note.text) for i, note in enumerate(notes[:limit])])
-            if not response:
-                return HttpResponse('You have not any notes. It can be created with POST request with "note" parameter at this path', status=204)
-
-        ua = parse(request.META.get('HTTP_USER_AGENT', ''))
-        if ua.device.family != OTHER or ua.browser.family != OTHER:
-            response = clean_tags(response)
-        return HttpResponse(response)
-
-    def get_note(self, notes, index):
-        if index + 1 >= self.get_limit() or notes.count() < index + 1:
-            raise Http404
-        return notes[index].text
-
-    @staticmethod
-    def post(request, **kwargs):
-        form = NoteForm(request.POST)
-        if form.is_valid() and not kwargs.get('index', None):
-            data = form.cleaned_data
-            alias = data.get('alias') if data.get('alias') else get_random_alias()
-            try:
-                Note.objects.create(text=data['note'], owner=request.user, alias=alias)
-            except IntegrityError:
-                return HttpResponse('Note with given alias ({0}) is already exists'.format(alias), status=400)
-            return HttpResponse('Ok', status=201)
-        return HttpResponse('Expected "note" in request body', status=400)
+    def post(self, request):
+        data = yield from request.post()    
+        note = self.note
+        note.alias = data.get('alias', note.alias)
+        note.text = data.get('text', note.text)
+        return Response({'status': 'ok'}, status=200)
 
 
-
-@require_POST
+@app.register('/report', methods=['POST'])
 def report_view(request):
-    form = ReportForm(request.POST)
-    if form.is_valid():
-        report = form.instance
+    data = yield from request.post()
+    if 'traceback' in data: 
+        report = Report(traceback=data.get('traceback'))
         if hasattr(request, 'user') and request.user:
             report.user = request.user
         report.info = request.META.get('HTTP_USER_AGENT', '')
