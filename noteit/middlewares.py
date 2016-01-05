@@ -28,6 +28,7 @@ def not_auth(realm='', header='WWW-Authenticate'):
 def not_auth_base(realm):
     return not_auth('Basic realm="%s"' % realm)
 
+
 def not_auth_token(realm):
     return not_auth(realm, 'Token')
 

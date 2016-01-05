@@ -4,7 +4,6 @@ import datetime as dt
 import peewee as pw
 from noteit.utils import gen_key, get_alias
 
-__name__ = 'init'
 
 def migrate(migrator, database, **kwargs):
     """ Write your migrations here.
@@ -51,3 +50,8 @@ def migrate(migrator, database, **kwargs):
         alias = pw.CharField(index=True, default=get_alias)
         active = pw.BooleanField(default=True)
         created = pw.DateTimeField(default=dt.datetime.now)
+
+        class Meta:
+            indexes = (
+                (('owner', 'alias'), True),
+            )

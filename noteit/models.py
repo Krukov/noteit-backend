@@ -63,6 +63,8 @@ class Note(pw.Model):
     active = pw.BooleanField(default=True)
     created = pw.DateTimeField(default=dt.datetime.now)
 
-    # class Meta:
-    #     unique_together = ('owner', 'alias')
-    #     order_by = ['-created']
+    class Meta:
+        indexes = (
+            (('owner', 'alias'), True),
+        )
+        order_by = ['-created']
