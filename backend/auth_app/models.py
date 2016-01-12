@@ -55,6 +55,7 @@ class User(AbstractBaseUser):
     class Meta:
         verbose_name = _('app user')
         verbose_name_plural = _('app users')
+        db_table = 'user'
 
     def __str__(self):
         return '{} {}'.format(self.username, ['not registered', 'registered'][self.is_register])
@@ -98,6 +99,9 @@ class Question(models.Model):
     def __str__(self):
         return '{}: {}'.format(self.text, self.answer)
 
+    class Meta:
+        db_table = 'question'
+
 
 class RegisterQuestion(models.Model):
     uuid = models.UUIDField(max_length=63, default=uuid4, unique=True, verbose_name='UUID')
@@ -109,6 +113,7 @@ class RegisterQuestion(models.Model):
 
     class Meta:
         ordering = ['date_create']
+        db_table = 'regquestion'
 
     def __str__(self):
         return '{} {}'.format(self.user.username, self.uuid)
@@ -138,3 +143,6 @@ class Token(models.Model):
 
     def __str__(self):
         return self.key
+
+    class Meta:
+        db_table = 'token'

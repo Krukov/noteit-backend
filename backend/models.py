@@ -20,7 +20,7 @@ class Note(models.Model):
     class Meta:
         unique_together = ('owner', 'alias')
         ordering = ['-date_create']
-
+        db_table = 'note'
 
 
 class Report(models.Model):
@@ -32,6 +32,7 @@ class Report(models.Model):
 
     class Meta:
         ordering = ['-date_create']
+        db_table = 'report'
 
     def __str__(self):
         return '{} {}'.format(self.date_create, self.info)
