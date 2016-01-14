@@ -38,13 +38,13 @@ class NotesHandler(Handler):
             if alias.isdigit():
                 return error("Alias can't be digit", 406)
             elif alias in RESERVED:
-                return error("wrong name for alias. Reserved names are %s" % RESERVED, 406)
+                return error("Wrong name for alias. Reserved names are %s" % RESERVED, 406)
             try:
-                Note.create(text=data.get('note'), owner=request.user, alias=data.get('alias'))
+                Note.create(text=data.get('text'), owner=request.user, alias=data.get('alias'))
             except IntegrityError:
                 return error('Alias must be unique', 409)
         else:
-            Note.create(text=data.get('note'), owner=request.user)
+            Note.create(text=data.get('text'), owner=request.user)
         return {'status': 'ok'}, 201
 
 

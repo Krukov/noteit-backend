@@ -37,8 +37,7 @@ class User(pw.Model):
             token = self.tokens.get()
         except Token.DoesNotExist:
             token = Token.create(user=self)
-        finally:
-            return token
+        return token
 
 
 @app.ps.peewee.register
@@ -63,7 +62,7 @@ class Note(pw.Model):
 @app.ps.peewee.register
 class Token(pw.Model):
     """ Store tokens. """
-    key = pw.PrimaryKeyField(default=gen_key, index=True)
+    key = pw.CharField(default=gen_key, index=True, primary_key=True)
     user = pw.ForeignKeyField(User, related_name='tokens')
     created = pw.DateTimeField(default=dt.datetime.now)
 

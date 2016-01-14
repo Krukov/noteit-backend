@@ -111,6 +111,5 @@ def token_middleware_factory(app, handler):
         response = yield from handler(request)
         return response
 
-
     return middleware
 

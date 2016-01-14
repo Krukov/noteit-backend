@@ -30,7 +30,7 @@ def migrate(migrator, database, **kwargs):
 
     @migrator.create_table
     class Token(pw.Model):
-        key = pw.PrimaryKeyField(default=gen_key, index=True)
+        key = pw.CharField(default=gen_key, index=True, primary_key=True)
         user = pw.ForeignKeyField(User, related_name='tokens')
         created = pw.DateTimeField(default=dt.datetime.now)
 
