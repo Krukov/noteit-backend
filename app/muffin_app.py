@@ -3,12 +3,14 @@
 
 import sys
 import os
-import muffin
-from schematics.types import StringType
+
+import ujson as json
 from peewee import IntegrityError
+
 from asyncio import coroutine, iscoroutine
-from aiohttp.multidict import MultiDict, MultiDictProxy
 from aiohttp.web import StreamResponse, HTTPMethodNotAllowed, Response
+
+import muffin
 from muffin import Response, HTTPNotFound, Handler
 from muffin.utils import abcoroutine
 
@@ -16,12 +18,12 @@ app_type = 'muffin'
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.append(BASE_DIR)
-import app
+import app # noqa
 __package__ = 'app'
 
 
 from .middlewares import basic_auth_handler, token_auth_handler
-from .utils import USER_AGENT_HEADER, RESERVED, clean_tags
+from .utils import USER_AGENT_HEADER, RESERVED, clean_tags, get_device_and_browser, OTHER
 from .models import Note, Report, User, Token
 
 
@@ -44,7 +46,6 @@ options = dict(
         'muffin_peewee',
     ],
 
-    # DEBUG=True
     LOG_LEVEL='DEBUG',
 )
 
@@ -110,7 +111,7 @@ for model in [Note, Report, User, Token]:
     app.ps.peewee.register(model)
 
 
-class SuperHandeler(Handler):
+class SuperHandler(Handler):
 
     @abcoroutine
     def make_response(self, request, response):
@@ -154,7 +155,7 @@ def error(msg, status=400):
 
 
 @app.register('/')
-class NotesHandler(SuperHandeler):
+class NotesHandler(SuperHandler):
 
     def get(self, request):
         limit = get_limit()
@@ -207,7 +208,7 @@ def drop_token_handler(request):
 
 
 @app.register('/{alias}')
-class NoteHandler(SuperHandeler):
+class NoteHandler(SuperHandler):
 
     @property
     def note(self):

@@ -19,7 +19,7 @@ from django.db.utils import IntegrityError
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.append(BASE_DIR)
-import app
+import app  # noqa
 __package__ = 'app'
 
 from .utils import clean_tags, USER_AGENT_HEADER, RESERVED, HTTP_HEADER_ENCODING
@@ -34,7 +34,7 @@ class Settings(ModuleType):
     ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
 
     DATABASES = {
-        'default': {'ENGINE': 'django.db.backends.sqlite3','NAME': 'notes.db'}
+        'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'notes.db'}
     }
     ROOT_URLCONF = __name__
     MIGRATION_MODULES = {'__main__': 'migrations'}
@@ -119,7 +119,7 @@ class NotesView(View):
                         Note.objects.create(text=data['text'], owner=request.user)
                 except IntegrityError:
                     status = 406
-                    response =  error('Alias must be unique')
+                    response = error('Alias must be unique')
                 else:
                     response = {'status': 'ok'}
         return JsonResponse(response, status=status)

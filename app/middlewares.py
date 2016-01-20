@@ -3,20 +3,16 @@
 
 import base64
 
-from django.http import HttpResponse
-from django.shortcuts import redirect
-from django.core.urlresolvers import reverse
-
 from .utils import HTTP_HEADER_ENCODING
 
 
-def non_privat_zone(request):
+def non_private_zone(request):
     return request.path.split('/')[1] in ['report']
 
 
 def basic_auth_handler(request, auth, not_auth, set_user, user_model):
     User = user_model
-    if non_privat_zone(request):
+    if non_private_zone(request):
         return
 
     if not auth or auth[0].lower() != b'basic':
@@ -48,7 +44,7 @@ def basic_auth_handler(request, auth, not_auth, set_user, user_model):
 
 def token_auth_handler(request, auth, not_auth, set_user, token_model):
     Token = token_model
-    if non_privat_zone(request):
+    if non_private_zone(request):
         return
 
     if not auth or auth[0].lower() != b'token':
@@ -71,5 +67,3 @@ def token_auth_handler(request, auth, not_auth, set_user, token_model):
         return not_auth('User inactive or deleted.')
 
     set_user(request, token.user)
-
-

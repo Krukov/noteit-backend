@@ -12,7 +12,6 @@ from user_agents import parse
 from muffin.utils import generate_password_hash, check_password_hash
 
 
-
 ALLOWED_TAGS = bleach.ALLOWED_TAGS + ['html', 'body', 'head', 'h1', 'h2', 'h3', 'h4', 'h5', 'pre',
                                       'meta', 'title', 'div', 'span', 'input', 'label', 'form', 'time',
                                       'img', 'button', 'tr', 'td', 'table', 'tbody', 'p', 'hr', 'br', 'nav']
