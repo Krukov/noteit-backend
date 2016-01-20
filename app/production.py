@@ -1,6 +1,6 @@
 import os
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'noteit.ru, localhost').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'noteit.ru').split(',')
 
 ROOT_URLCONF = __name__
 MIGRATION_MODULES = {'__main__': 'migrations'}
@@ -16,7 +16,7 @@ MIDDLEWARE_CLASSES = (
 )
 DEBUG = False
 SECRET_KEY = os.environ.get('SECRET_KEY', None)
-WSGI_APPLICATION = '__main__.app'
+WSGI_APPLICATION = 'wsgi.application'
 
 
 DATABASES = {

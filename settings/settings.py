@@ -5,19 +5,17 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file_
 DEBUG = False
 
 INSTALLED_APPS = (
-    'backend',
-    'backend.auth_app',
+    'noteit',	
 )
 
-APP_USER_MODEL = 'auth_app.User'
 
 MIDDLEWARE_CLASSES = (
-    'backend.auth_app.middlewares.TokenAuthentication',
-    'backend.auth_app.middlewares.BasicAuthMiddleware',
+    'noteit.middlewares.TokenAuthentication',
+    'noteit.middlewares.BasicAuthMiddleware',
     'django.middleware.security.SecurityMiddleware',
 )
 
-ROOT_URLCONF = 'backend.urls'
+ROOT_URLCONF = 'noteit.urls'
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
