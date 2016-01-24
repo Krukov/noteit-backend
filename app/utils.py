@@ -24,7 +24,7 @@ ALLOWED_ATTRS.update({
 })
 fake = Faker()
 
-RESERVED = ['get_token', 'drop_token', 'report']
+RESERVED = ['get_token', 'drop_tokens', 'report']
 HTTP_HEADER_ENCODING = 'iso-8859-1'
 USER_AGENT_HEADER = 'User-Agent'
 OTHER = 'Other'

@@ -4,26 +4,24 @@
 import sys
 import os
 
+import muffin
 import ujson as json
+
 from peewee import IntegrityError
 
 from asyncio import coroutine, iscoroutine
 from aiohttp.web import StreamResponse, HTTPMethodNotAllowed, Response
-
-import muffin
-from muffin import Response, HTTPNotFound, Handler
+from muffin import Response, HTTPNotFound, Handler, Application
 from muffin.utils import abcoroutine
 
-app_type = 'muffin'
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-sys.path.append(BASE_DIR)
-import app # noqa
+sys.path.append(os.path.normpath(BASE_DIR))
+import app
 __package__ = 'app'
 
-
 from .middlewares import basic_auth_handler, token_auth_handler
-from .utils import USER_AGENT_HEADER, RESERVED, clean_tags, get_device_and_browser, OTHER
+from .utils import USER_AGENT_HEADER, RESERVED, OTHER, clean_tags, get_device_and_browser
 from .models import Note, Report, User, Token
 
 
@@ -37,7 +35,7 @@ options = dict(
     # ==============
 
     PEEWEE_MIGRATIONS_PATH='noteit/migrations',
-    PEEWEE_CONNECTION='sqlite:///local.sqlite',
+    PEEWEE_CONNECTION='sqlite:///notes.db',
 
     DEBUGTOOLBAR_EXCLUDE=['/static'],
     DEBUGTOOLBAR_HOSTS=['0.0.0.0/0'],
@@ -57,7 +55,7 @@ def get_authorization_header(request):
     auth = request.headers.get(BASIC_AUTH_HEADER, b'')
     if isinstance(auth, type('')):
         auth = auth.encode(HTTP_HEADER_ENCODING)
-    return auth
+    return auth.split()
 
 
 def not_auth(realm='', header='WWW-Authenticate'):
@@ -81,8 +79,11 @@ def baseauth_middleware_factory(app, handler):
     """ Baseauth authithication middleware factory"""
     @coroutine
     def middleware(request):
-        response = basic_auth_handler(request, get_authorization_header(request),
-                                      not_auth_base, set_user, User)
+        if hasattr(request, 'user'):
+            response = None
+        else:
+            response = basic_auth_handler(request, get_authorization_header(request),
+                                          not_auth_base, set_user, User)
         if not response:
             response = yield from handler(request)
 
@@ -95,15 +96,18 @@ def token_middleware_factory(app, handler):
     """ Tokenbase authithication middleware factory"""
     @coroutine
     def middleware(request):
-        response = token_auth_handler(request, get_authorization_header(request),
-                                      not_auth_token, set_user, Token)
+        if hasattr(request, 'user'):
+            response = None
+        else:
+            response = token_auth_handler(request, get_authorization_header(request),
+                                          not_auth_token, set_user, Token)
         if not response:
             response = yield from handler(request)
         return response
     return middleware
 
 
-app = application = muffin.Application('noteit', **options)
+app = application = Application('noteit', **options)
 app._middlewares.extend([token_middleware_factory, baseauth_middleware_factory])
 
 
@@ -201,7 +205,7 @@ def get_token_handler(request):
     return {'status': 'ok', 'token': request.user.token.key}
 
 
-@app.register('/drop_token', methods=['POST'])
+@app.register('/drop_tokens', methods=['POST'])
 def drop_token_handler(request):
     request.user.token.delete_instance()
     return {'status': 'ok'}
@@ -228,7 +232,3 @@ class NoteHandler(SuperHandler):
         self.request = request
         self.note.delete_instance()
         return {'status': 'ok'}, 204
-
-
-if __name__ == "__main__":
-    app.start()

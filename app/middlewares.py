@@ -28,6 +28,7 @@ def basic_auth_handler(request, auth, not_auth, set_user, user_model):
 
     username, password = auth_parts[0], auth_parts[2]
     user = User.get(username=username)
+
     if user is None:
         user = User(username=username)
         user.set_password(password)
@@ -59,7 +60,7 @@ def token_auth_handler(request, auth, not_auth, set_user, token_model):
         return not_auth('Invalid token header. Token string should not contain invalid characters.')
 
     token = Token.get_by_key(key=key)
-    
+
     if not token:
         return not_auth('Invalid token.')
 

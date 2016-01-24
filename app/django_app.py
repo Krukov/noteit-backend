@@ -19,8 +19,9 @@ from django.db.utils import IntegrityError
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.append(BASE_DIR)
-import app  # noqa
-__package__ = 'app'
+
+import app as django_app
+__package__ = 'django_app'
 
 from .utils import clean_tags, USER_AGENT_HEADER, RESERVED, HTTP_HEADER_ENCODING
 from .middlewares import basic_auth_handler, token_auth_handler
@@ -185,8 +186,8 @@ def drop_token(request):
 urlpatterns = [
     url(r'^$', NotesView.as_view()),
     url(r'^report/?$', report_view, name='report'),
-    url(r'^get_token', get_token, name='get_token'),
-    url(r'^drop_token', drop_token, name='drop_token'),
+    url(r'^get_token/?', get_token, name='get_token'),
+    url(r'^drop_tokens/?', drop_token, name='drop_token'),
     url(r'^(?P<alias>\w{1,30})/?$', NoteView.as_view()),
 ]
 

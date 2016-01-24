@@ -5,7 +5,8 @@ import datetime as dt
 import __main__
 
 DJANGO = False
-if __main__.app_type == 'django':
+
+if hasattr(__main__, 'app_type') and __main__.app_type == 'django':
     DJANGO = True
     from django.db import models
 else:
@@ -103,7 +104,7 @@ class Token(models.Model):
             if DJANGO:
                 return cls.objects.select_related('user').get(key=key)
             else:
-                return cls.select().where(cls.key == key).get()  # TODO 
+                return cls.select(cls, User).join(User).where(cls.key == key).get()  # TODO 
         except cls.DoesNotExist:  
             return
 
