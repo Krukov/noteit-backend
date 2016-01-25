@@ -4,14 +4,19 @@
 import datetime as dt
 import __main__
 
-DJANGO = False
 
-if hasattr(__main__, 'app_type') and __main__.app_type == 'django':
-    DJANGO = True
-    from django.db import models
-else:
+try:
+    from django.core.exceptions import ImproperlyConfigured
+    from django.conf import settings
+    APP_LABEL = settings.APP_LABEL
+except (ImportError, ImproperlyConfigured):
+    DJANGO = False
     import peewee as models
     models.ForeignKey = models.ForeignKeyField
+    APP_LABEL = None
+else:
+    DJANGO = True
+    from django.db import models
 
 from utils import gen_key, get_alias, generate_password_hash, check_password_hash
 
@@ -25,6 +30,7 @@ class User(models.Model):
     __module__ = '__main__'  # django hack stuff
 
     class Meta:
+        app_label = APP_LABEL
         db_table = 'user'
  
     def __unicode__(self):
@@ -73,6 +79,7 @@ class Note(models.Model):
     class Meta:
         db_table = 'note'
         if DJANGO:
+            app_label = APP_LABEL
             unique_together = ('owner', 'alias')
             ordering = ['-created']
         else:
@@ -93,6 +100,7 @@ class Token(models.Model):
     __module__ = '__main__'
 
     class Meta:
+        app_label = APP_LABEL
         db_table = 'token'
 
     def __unicode__(self):
@@ -120,6 +128,7 @@ class Report(models.Model):
     class Meta:
         if DJANGO:
             ordering = ['-created']
+            app_label = APP_LABEL
         else:
             order_by = ['-created']
         db_table = 'report'

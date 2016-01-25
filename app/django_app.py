@@ -16,19 +16,33 @@ from django.http import HttpResponse, JsonResponse, Http404
 from django.forms import ModelForm
 from django.views.decorators.http import require_POST
 from django.db.utils import IntegrityError
+from django.apps.config import AppConfig
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.append(BASE_DIR)
 
-import app as django_app
-__package__ = 'django_app'
+import app
+__package__ = 'app'
 
 from .utils import clean_tags, USER_AGENT_HEADER, RESERVED, HTTP_HEADER_ENCODING
 from .middlewares import basic_auth_handler, token_auth_handler
 
 
+APP_LABEL = __package__
+
+
+class App(AppConfig):
+    verbose_name = 'Main'
+    label = APP_LABEL
+
+
+app = App('name', sys.modules[__name__])
+FILE = __file__.split('.')[-2].split('/')[-1]
+
+
 class Settings(ModuleType):
     DEBUG = os.environ.get('DEBUG', 'on') == 'on'
+    APP_LABEL = APP_LABEL
 
     SECRET_KEY = os.environ.get('SECRET_KEY', os.urandom(32))
 
@@ -38,12 +52,12 @@ class Settings(ModuleType):
         'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'notes.db'}
     }
     ROOT_URLCONF = __name__
-    MIGRATION_MODULES = {'__main__': 'migrations'}
-    
-    INSTALLED_APPS = ('__main__', )
+    MIGRATION_MODULES = {APP_LABEL: 'migrations'}
+    INSTALLED_APPS = (app,)
+
     MIDDLEWARE_CLASSES = (
-        '__main__.TokenAuthentication',
-        '__main__.BasicAuthMiddleware',
+        APP_LABEL + '.' + FILE + '.TokenAuthentication',
+        APP_LABEL + '.' + FILE + '.BasicAuthMiddleware',
         'django.middleware.security.SecurityMiddleware',
     )
 
@@ -51,8 +65,6 @@ class Settings(ModuleType):
 # if "DJANGO_SETTINGS_MODULE" not in os.environ:
 sys.modules['settings'] = Settings
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
-
-app_type = 'django'
 
 django.setup()
 
