@@ -21,7 +21,7 @@ import app
 __package__ = 'app'
 
 from .middlewares import basic_auth_handler, token_auth_handler
-from .utils import USER_AGENT_HEADER, RESERVED, OTHER, clean_tags, get_device_and_browser
+from .utils import USER_AGENT_HEADER, OTHER, clean_tags, get_device_and_browser
 from .models import Note, Report, User, Token
 
 
@@ -158,7 +158,7 @@ def error(msg, status=400):
     return {'status': 'error', 'error': msg}, status
 
 
-@app.register('/')
+@app.register('/notes')
 class NotesHandler(SuperHandler):
 
     def get(self, request):
@@ -174,8 +174,6 @@ class NotesHandler(SuperHandler):
             alias = data.get('alias')
             if alias.isdigit():
                 return error("Alias can't be digit", 406)
-            elif alias in RESERVED:
-                return error("Wrong name for alias. Reserved names are %s" % RESERVED, 406)
             try:
                 Note.create(text=data.get('text'), owner=request.user, alias=data.get('alias'))
             except IntegrityError:
@@ -185,33 +183,7 @@ class NotesHandler(SuperHandler):
         return {'status': 'ok'}, 201
 
 
-@app.register('/report', methods=['POST'])
-def report_view(request, response):
-    data = yield from request.post()
-    if 'traceback' in data:
-        report = Report(traceback=data.get('traceback'))
-        if hasattr(request, 'user') and request.user:
-            report.user = request.user
-        report.info = request.headers.get(USER_AGENT_HEADER, b'')
-        report.save()
-        response.set_status(201)
-        return {'status': 'ok'}
-    response.set_status(400)
-    return error('required traceback')[0]
-
-
-@app.register('/get_token', methods=['POST'])
-def get_token_handler(request):
-    return {'status': 'ok', 'token': request.user.token.key}
-
-
-@app.register('/drop_tokens', methods=['POST'])
-def drop_token_handler(request):
-    request.user.token.delete_instance()
-    return {'status': 'ok'}
-
-
-@app.register('/{alias}')
+@app.register('/notes/{alias}')
 class NoteHandler(SuperHandler):
 
     @property
@@ -232,3 +204,14 @@ class NoteHandler(SuperHandler):
         self.request = request
         self.note.delete_instance()
         return {'status': 'ok'}, 204
+
+
+@app.register('/get_token', methods=['POST'])
+def get_token_handler(request):
+    return {'status': 'ok', 'token': request.user.token.key}
+
+
+@app.register('/drop_tokens', methods=['POST'])
+def drop_token_handler(request):
+    request.user.token.delete_instance()
+    return {'status': 'ok'}

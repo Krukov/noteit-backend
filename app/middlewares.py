@@ -7,7 +7,7 @@ from .utils import HTTP_HEADER_ENCODING
 
 
 def non_private_zone(request):
-    return request.path.split('/')[1] in ['report']
+    return request.path.split('/')[1] not in ['notes', 'drop_tokens', 'get_token']
 
 
 def basic_auth_handler(request, auth, not_auth, set_user, user_model):

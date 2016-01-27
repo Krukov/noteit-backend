@@ -11,10 +11,10 @@ from user_agents import parse
 import django
 from django.conf.urls import url
 from django.core.wsgi import get_wsgi_application
-from django.views.generic import View
+from django.views.generic import View, TemplateView
 from django.http import HttpResponse, JsonResponse, Http404
 from django.forms import ModelForm
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.db.utils import IntegrityError
 from django.apps.config import AppConfig
 
@@ -24,7 +24,7 @@ sys.path.append(BASE_DIR)
 import app
 __package__ = 'app'
 
-from .utils import clean_tags, USER_AGENT_HEADER, RESERVED, HTTP_HEADER_ENCODING
+from .utils import clean_tags, USER_AGENT_HEADER, HTTP_HEADER_ENCODING
 from .middlewares import basic_auth_handler, token_auth_handler
 
 
@@ -38,6 +38,7 @@ class App(AppConfig):
 
 app = App('name', sys.modules[__name__])
 FILE = __file__.split('.')[-2].split('/')[-1]
+BASE_DIR = os.path.normpath(os.path.dirname(__file__))
 
 
 class Settings(ModuleType):
@@ -60,7 +61,6 @@ class Settings(ModuleType):
         APP_LABEL + '.' + FILE + '.BasicAuthMiddleware',
         'django.middleware.security.SecurityMiddleware',
     )
-
 
 # if "DJANGO_SETTINGS_MODULE" not in os.environ:
 sys.modules['settings'] = Settings
@@ -121,20 +121,16 @@ class NotesView(View):
             status = 201
             data = form.cleaned_data
             alias = data.get('alias', None)
-            if alias in RESERVED:
-                status = 406
-                response = error("Wrong name for alias. Reserved names are %s" % RESERVED)
-            else:
-                try:
-                    if alias:
-                        Note.objects.create(text=data['text'], owner=request.user, alias=alias)
-                    else:
-                        Note.objects.create(text=data['text'], owner=request.user)
-                except IntegrityError:
-                    status = 406
-                    response = error('Alias must be unique')
+            try:
+                if alias:
+                    Note.objects.create(text=data['text'], owner=request.user, alias=alias)
                 else:
-                    response = {'status': 'ok'}
+                    Note.objects.create(text=data['text'], owner=request.user)
+            except IntegrityError:
+                status = 406
+                response = error('Alias must be unique')
+            else:
+                response = {'status': 'ok'}
         return JsonResponse(response, status=status)
 
 
@@ -194,13 +190,20 @@ def drop_token(request):
     request.user.token.delete()
     return JsonResponse({'status': 'ok'}, status=202)
 
+@require_GET
+def get_install_script(request):
+    with open(os.path.join(BASE_DIR, '..', 'install.sh')) as script:
+        return HttpResponse(script.read())
+
 
 urlpatterns = [
-    url(r'^$', NotesView.as_view()),
+    url(r'^notes/?$', NotesView.as_view()),
+    url(r'^notes/(?P<alias>.{1,30})/?$', NoteView.as_view()),
     url(r'^report/?$', report_view, name='report'),
-    url(r'^get_token/?', get_token, name='get_token'),
-    url(r'^drop_tokens/?', drop_token, name='drop_token'),
-    url(r'^(?P<alias>\w{1,30})/?$', NoteView.as_view()),
+    url(r'^get_token/?$', get_token, name='get_token'),
+    url(r'^drop_tokens/?$', drop_token, name='drop_token'),
+
+    url(r'^install.sh$', get_install_script),
 ]
 
 

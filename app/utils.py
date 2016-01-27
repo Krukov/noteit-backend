@@ -24,7 +24,6 @@ ALLOWED_ATTRS.update({
 })
 fake = Faker()
 
-RESERVED = ['get_token', 'drop_tokens', 'report']
 HTTP_HEADER_ENCODING = 'iso-8859-1'
 USER_AGENT_HEADER = 'User-Agent'
 OTHER = 'Other'
@@ -36,10 +35,7 @@ def gen_key():
 
 
 def get_alias():
-    alias = fake.word()
-    if alias in RESERVED:
-        return get_alias()
-    return alias
+    return fake.word()
 
 
 def clean_tags(text):

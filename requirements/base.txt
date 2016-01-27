@@ -1,6 +1,4 @@
 Django              >=1.9
-bleach
-user-agents
 muffin              >= 0.1.6
 muffin-peewee       >= 0.3.0
 fake-factory
