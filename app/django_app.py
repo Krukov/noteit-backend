@@ -38,7 +38,6 @@ class App(AppConfig):
 
 app = App('name', sys.modules[__name__])
 FILE = __file__.split('.')[-2].split('/')[-1]
-BASE_DIR = os.path.normpath(os.path.dirname(__file__))
 
 
 class Settings(ModuleType):
@@ -50,7 +49,7 @@ class Settings(ModuleType):
     ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
 
     DATABASES = {
-        'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': 'notes.db'}
+        'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': os.path.join(BASE_DIR, 'notes.db')}
     }
     ROOT_URLCONF = __name__
     MIGRATION_MODULES = {APP_LABEL: 'migrations'}
@@ -192,7 +191,7 @@ def drop_token(request):
 
 @require_GET
 def get_install_script(request):
-    with open(os.path.join(BASE_DIR, '..', 'install.sh')) as script:
+    with open(os.path.join(BASE_DIR, 'install.sh')) as script:
         return HttpResponse(script.read())
 
 
@@ -203,7 +202,7 @@ urlpatterns = [
     url(r'^get_token/?$', get_token, name='get_token'),
     url(r'^drop_tokens/?$', drop_token, name='drop_token'),
 
-    url(r'^install.sh$', get_install_script),
+    url(r'^install\.sh$', get_install_script),
 ]
 
 
