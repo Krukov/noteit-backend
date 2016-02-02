@@ -127,7 +127,7 @@ class NotesView(View):
                     Note.objects.create(text=data['text'], owner=request.user)
             except IntegrityError:
                 status = 406
-                response = error('Alias must be unique')
+                response = error('Alias must be unique, use -o option to overwrite')
             else:
                 response = {'status': 'ok'}
         return JsonResponse(response, status=status)
@@ -141,10 +141,8 @@ class NoteView(View):
         if not alias:
             raise Http404
         try:
-            if alias.isdigit() and int(alias) < get_limit():
-                return self.request.user.notes.filter(active=True)[int(alias) - 1]
             return self.request.user.notes.filter(alias=alias, active=True).get()
-        except (Note.DoesNotExist, IndexError):
+        except Note.DoesNotExist:
             raise Http404
 
     def get(self, request, **kwargs):
