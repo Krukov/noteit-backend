@@ -18,7 +18,7 @@ else:
     DJANGO = True
     from django.db import models
 
-from utils import gen_key, get_alias, generate_password_hash, check_password_hash
+from .utils import gen_key, get_alias, generate_password_hash, check_password_hash
 
 
 class User(models.Model):
@@ -35,6 +35,8 @@ class User(models.Model):
  
     def __unicode__(self):
         return self.username
+
+    __str__ = __unicode__
 
     @property
     def pk(self):
@@ -67,6 +69,29 @@ class User(models.Model):
             return    
 
 
+class NoteBook(models.Model):
+    """ Implement NoteBook models"""
+    name = models.CharField(max_length=2**13-1)
+
+    __module__ = '__main__'
+    
+    def __unicode__(self):
+        return self.name
+
+    __str__ = __unicode__
+
+    @classmethod
+    def get_or_create(cls, name):
+        if DJANGO:
+            return cls.objects.get_or_create(name=name)[0]
+        else:
+            return cls.create_or_get(name=name)
+
+    class Meta:
+        db_table = 'notebook'
+        app_label = APP_LABEL
+
+
 class Note(models.Model):
     """ Implement Note models"""
     text = models.CharField(max_length=2**13-1)
@@ -74,6 +99,7 @@ class Note(models.Model):
     alias = models.CharField(max_length=63, default=get_alias) # index=True
     active = models.BooleanField(default=True)
     created = models.DateTimeField(default=dt.datetime.now)
+    notebook = models.ForeignKey(NoteBook, related_name='notes', null=True)
     __module__ = '__main__'
 
     class Meta:
@@ -89,7 +115,7 @@ class Note(models.Model):
             order_by = ['-created']
         
     def as_dict(self):
-        return {'text': self.text, 'alias': self.alias}
+        return {'text': self.text, 'alias': self.alias, 'notebook': getattr(self.notebook, 'name', None)}
 
 
 class Token(models.Model):
@@ -105,6 +131,8 @@ class Token(models.Model):
 
     def __unicode__(self):
         return self.key
+
+    __str__ = __unicode__
 
     @classmethod
     def get_by_key(cls, key):
@@ -135,3 +163,5 @@ class Report(models.Model):
 
     def __unicode__(self):
         return '{} {}'.format(self.created, self.user)
+
+    __str__ = __unicode__

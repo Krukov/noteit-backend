@@ -13,7 +13,7 @@ from django.conf.urls import url
 from django.core.wsgi import get_wsgi_application
 from django.views.generic import View, TemplateView
 from django.http import HttpResponse, JsonResponse, Http404
-from django.forms import ModelForm
+from django.forms import ModelForm, CharField
 from django.views.decorators.http import require_POST, require_GET
 from django.db.utils import IntegrityError
 from django.apps.config import AppConfig
@@ -67,7 +67,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
 
 django.setup()
 
-from .models import Note, Report, User, Token
+from .models import Note, Report, User, Token, NoteBook
 
 
 OTHER = 'Other'
@@ -78,10 +78,11 @@ def get_limit():
 
 
 class NoteForm(ModelForm):
+    _notebook = CharField(max_length=255, required=False)
 
     class Meta:
         model = Note
-        fields = ['text', 'alias']
+        fields = ['text', 'alias', '_notebook']
     
     def __init__(self, *args, **kwargs):
         super(NoteForm, self).__init__(*args, **kwargs)
@@ -101,30 +102,39 @@ def error(msg):
 
 class NotesView(View):
 
+    def get_queryset(self):
+        return self.request.user.notes.filter(active=True)[:get_limit()]
+
     def get(self, request, **kwargs):
         status = 200
-        limit = get_limit()
-        notes = request.user.notes.filter(active=True)[:limit]
+        notes = self.get_queryset()
         response = [note.as_dict() for note in notes]
         if not response:
             response = error('No notes')
             status = 204
         return JsonResponse(response, status=status, safe=False)
 
-    @staticmethod
-    def post(request, **kwargs):
+    def post(self, request, **kwargs):
         status = 400
         response = error('No data')
         form = NoteForm(request.POST)
         if form.is_valid():
             status = 201
-            data = form.cleaned_data
-            alias = data.get('alias', None)
+            data = {
+                'text': form.cleaned_data['text'],
+                '_notebook': form.cleaned_data.get('_notebook') or kwargs.get('name'),
+                'alias': form.cleaned_data.get('alias', None),
+                'owner': request.user
+            }
+            print(data)
+            if not data['alias']:
+                del data['alias']
+            if data.get('_notebook'):
+                data['notebook'] = NoteBook.get_or_create(data.pop('_notebook'))
+            else:
+                del data['_notebook']
             try:
-                if alias:
-                    Note.objects.create(text=data['text'], owner=request.user, alias=alias)
-                else:
-                    Note.objects.create(text=data['text'], owner=request.user)
+                Note.objects.create(**data)
             except IntegrityError:
                 status = 406
                 response = error('Alias must be unique, use -o option to overwrite')
@@ -132,6 +142,13 @@ class NotesView(View):
                 response = {'status': 'ok'}
         return JsonResponse(response, status=status)
 
+
+class NotebookView(NotesView):
+
+    def get_queryset(self):
+        qs = self.request.user.notes.filter(active=True, notebook__name=self.kwargs['name'])
+        return qs[:get_limit()]
+    
 
 class NoteView(View):
 
@@ -196,6 +213,8 @@ def get_install_script(request):
 urlpatterns = [
     url(r'^notes/?$', NotesView.as_view()),
     url(r'^notes/(?P<alias>.{1,30})/?$', NoteView.as_view()),
+    url(r'^notebook/(?P<name>.{1,30})/?$', NotebookView.as_view()),
+    
     url(r'^report/?$', report_view, name='report'),
     url(r'^get_token/?$', get_token, name='get_token'),
     url(r'^drop_tokens/?$', drop_token, name='drop_token'),

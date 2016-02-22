@@ -22,7 +22,7 @@ __package__ = 'app'
 
 from .middlewares import basic_auth_handler, token_auth_handler
 from .utils import USER_AGENT_HEADER, OTHER, clean_tags, get_device_and_browser
-from .models import Note, Report, User, Token
+from .models import Note, Report, User, Token, NoteBook
 
 
 options = dict(
@@ -36,13 +36,6 @@ options = dict(
 
     PEEWEE_MIGRATIONS_PATH='noteit/migrations',
     PEEWEE_CONNECTION='sqlite:///notes.db',
-
-    DEBUGTOOLBAR_EXCLUDE=['/static'],
-    DEBUGTOOLBAR_HOSTS=['0.0.0.0/0'],
-    DEBUGTOOLBAR_INTERCEPT_REDIRECTS=False,
-    DEBUGTOOLBAR_ADDITIONAL_PANELS=[
-        'muffin_peewee',
-    ],
 
     LOG_LEVEL='DEBUG',
 )
@@ -111,7 +104,7 @@ app = application = Application('noteit', **options)
 app._middlewares.extend([token_middleware_factory, baseauth_middleware_factory])
 
 
-for model in [Note, Report, User, Token]:
+for model in [Note, Report, User, Token, NoteBook]:
     app.ps.peewee.register(model)
 
 
@@ -168,18 +161,26 @@ class NotesHandler(SuperHandler):
             return error('No notes', status=204)
         return [note.as_dict() for note in notes]
 
-    def post(self, request):
+    def get_init_data(self, request):
         data = yield from request.post()
+        out = {
+            'owner': request.user, 
+            'text': data['text'],
+        }
+        if '_notebook' in data and 'name' not in request.match_info:
+            out['notebook'] = NoteBook.get_or_create(data['_notebook'])[0]
         if 'alias' in data:
-            alias = data.get('alias')
-            if alias.isdigit():
-                return error("Alias can't be digit", 406)
-            try:
-                Note.create(text=data.get('text'), owner=request.user, alias=data.get('alias'))
-            except IntegrityError:
-                return error('Alias must be unique', 409)
-        else:
-            Note.create(text=data.get('text'), owner=request.user)
+            out['alias'] = data.get('alias')
+        
+        return out
+
+    def post(self, request):
+        create_data = yield from self.get_init_data(request)
+        print(create_data)
+        try:
+            Note.create(**create_data)
+        except IntegrityError:
+            return error('Alias must be unique', 409)
         return {'status': 'ok'}, 201
 
 
@@ -190,8 +191,6 @@ class NoteHandler(SuperHandler):
     def note(self):
         alias = self.request.match_info.get('alias')
         try:
-            if alias.isdigit() and int(alias) < get_limit():
-                return self.request.user.notes.filter(active=True)[int(alias) - 1]
             return self.request.user.notes.filter(alias=alias, active=True).get()
         except (Note.DoesNotExist, IndexError):
             raise HTTPNotFound
@@ -215,3 +214,21 @@ def get_token_handler(request):
 def drop_token_handler(request):
     request.user.token.delete_instance()
     return {'status': 'ok'}
+
+
+@app.register('/notebook/{name}', methods=['GET', 'POST'])
+class NotebookView(NotesHandler):
+
+    def get(self, request):
+        limit = get_limit()
+        name = request.match_info.get('name')
+        notes = request.user.notes.filter(notebook__name=name, active=True).limit(limit)
+        if not notes:
+            return error('No notes', status=204)
+        return [note.as_dict() for note in notes]
+
+    def get_init_data(self, request):
+        data = super().get_init_data(request)
+        name = request.match_info.get('name')
+        data['notebook'] = NoteBook.get_or_create(name)
+        return data
