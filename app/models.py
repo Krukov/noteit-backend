@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import datetime as dt
-import __main__
 
 
 try:

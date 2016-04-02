@@ -4,13 +4,11 @@
 import sys
 import os
 
-import muffin
 import ujson as json
 
 from peewee import IntegrityError
 
 from asyncio import coroutine, iscoroutine
-from aiohttp.web import StreamResponse, HTTPMethodNotAllowed, Response
 from muffin import Response, HTTPNotFound, Handler, Application
 from muffin.utils import abcoroutine
 
@@ -21,7 +19,7 @@ import app
 __package__ = 'app'
 
 from .middlewares import basic_auth_handler, token_auth_handler
-from .utils import USER_AGENT_HEADER, OTHER, clean_tags, get_device_and_browser
+from .utils import OTHER, clean_tags, get_device_and_browser
 from .models import Note, Report, User, Token, NoteBook
 
 
@@ -156,7 +154,7 @@ class NotesHandler(SuperHandler):
 
     def get(self, request):
         limit = get_limit()
-        notes = request.user.notes.filter(active=True).limit(limit)
+        notes = request.user.notes.filter(active=True, notebook=None).limit(limit)
         if not notes:
             return error('No notes', status=204)
         return [note.as_dict() for note in notes]
@@ -176,7 +174,6 @@ class NotesHandler(SuperHandler):
 
     def post(self, request):
         create_data = yield from self.get_init_data(request)
-        print(create_data)
         try:
             Note.create(**create_data)
         except IntegrityError:
@@ -232,3 +229,7 @@ class NotebookView(NotesHandler):
         name = request.match_info.get('name')
         data['notebook'] = NoteBook.get_or_create(name)
         return data
+
+
+if __name__ == "__main__":
+    app.manage()

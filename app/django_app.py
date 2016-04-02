@@ -103,7 +103,7 @@ def error(msg):
 class NotesView(View):
 
     def get_queryset(self):
-        return self.request.user.notes.filter(active=True)[:get_limit()]
+        return self.request.user.notes.filter(active=True, notebook__isnull=True)[:get_limit()]
 
     def get(self, request, **kwargs):
         status = 200
@@ -126,7 +126,7 @@ class NotesView(View):
                 'alias': form.cleaned_data.get('alias', None),
                 'owner': request.user
             }
-            print(data)
+
             if not data['alias']:
                 del data['alias']
             if data.get('_notebook'):
@@ -173,7 +173,7 @@ class NoteView(View):
             ct = 'application/json'
         return HttpResponse(response, content_type=ct)
 
-    def delete(self, request, **kwargs):
+    def delete(self, **kwargs):
         self.note.delete()
         return JsonResponse({'status': 'ok'}, status=204)
 
@@ -203,6 +203,7 @@ def get_token(request):
 def drop_token(request):
     request.user.token.delete()
     return JsonResponse({'status': 'ok'}, status=202)
+
 
 @require_GET
 def get_install_script(request):
