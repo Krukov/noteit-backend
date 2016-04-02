@@ -103,6 +103,11 @@ def error(msg):
 class NotesView(View):
 
     def get_queryset(self):
+        if 'all' in self.request.GET:
+            return self.request.user.notes.filter(active=True)
+        if 'notebook' in self.request.GET:
+            return self.request.user.notes.filter(active=True,
+                                                  notebook__name=self.request.GET['notebook'])[:get_limit()]
         return self.request.user.notes.filter(active=True, notebook__isnull=True)[:get_limit()]
 
     def get(self, request, **kwargs):
