@@ -178,7 +178,7 @@ class NoteView(View):
             ct = 'application/json'
         return HttpResponse(response, content_type=ct)
 
-    def delete(self, **kwargs):
+    def delete(self, *args, **kwargs):
         self.note.delete()
         return JsonResponse({'status': 'ok'}, status=204)
 
